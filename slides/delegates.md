@@ -419,6 +419,11 @@ processor.ProcessCompleted += (s) => Console.WriteLine(s);
 ````
 
 If you need to remove a delegate later, use a named method instead.
+Otherwise, you will need to reset the entire pointer with:
+
+````csharp
+processor.ProcessCompleted = null;
+````
 
 # Events
 
@@ -443,34 +448,53 @@ The `event` keyword restricts these actions:
 
 In .NET, events should follow a standard pattern using the `EventHandler` delegate.
 
-### 1. The Event Declaration
+### 1. The Event Data (EventArgs)
 
-Always use `void` as the return type. The standard `EventHandler` takes two parameters:
+To pass custom data, create a class inheriting from `EventArgs`. The naming convention is to end
+the class name with `EventArgs`.
 
+````csharp
+public class OrderEventArgs : EventArgs
+{
+    public Order Order { get; }
+    public OrderEventArgs(Order order) => Order = order;
+}
+````
+
+### 2. The Event Declaration
+
+Always use `void` as the return type. The standard `EventHandler` delegate pattern is:
 - `object? sender`: The instance that raised the event.
-- `TEventArgs e`: Data associated with the event (must derive from `EventArgs`).
+- `TEventArgs e`: Data associated with the event.
+
+Use the generic `EventHandler<TEventArgs>` for custom data, or the non-generic `EventHandler` for
+events without data (equivalent to `EventHandler<EventArgs>`).
 
 ````csharp
 public class OrderProcessor
 {
-    // Standard event without custom data
+    // Without custom data (uses EventArgs.Empty)
     public event EventHandler? OrderStarted;
 
-    // Event with custom data
+    // With custom data
     public event EventHandler<OrderEventArgs>? OrderCompleted;
 }
 ````
 
-### 2. Raising the Event
+### 3. Raising the Event (The "On" Pattern)
 
-The recommended practice is to create a `protected virtual` method to raise the event. This allows
-derived classes to handle the event or change its behavior.
+The recommended practice is to create a `protected virtual` method to raise the event (e.g.,
+`OnOrderCompleted`).
+
+- **Protected:** Prevents external classes from "faking" the event.
+- **Virtual:** Allows derived classes to override the behavior (e.g., adding logging or canceling
+  the event) before or after calling `base.OnOrderCompleted()`.
 
 ````csharp
 protected virtual void OnOrderCompleted(Order order)
 {
     // Use the null-conditional operator to avoid NullReferenceException
-    // and provide thread-safety.
+    // and provide thread-safety by capturing the delegate copy.
     OrderCompleted?.Invoke(this, new OrderEventArgs(order));
 }
 ````
@@ -480,7 +504,7 @@ protected virtual void OnOrderCompleted(Order order)
 > before checking for null, preventing a race condition where a subscriber unregisters between the
 > check and the call.
 
-### 3. Subscribing to Events
+### 4. Subscribing to Events
 
 Subscribers "attach" their logic using the `+=` operator.
 
@@ -508,3 +532,68 @@ void HandleOrderCompleted(object? sender, OrderEventArgs e)
 - **Signature:** Always use `(object sender, EventArgs e)`.
 - **Encapsulation:** Always use the `event` keyword to prevent external invocation.
 - **Data:** If you need to pass data, create a class that inherits from `EventArgs`.
+
+## Full Example: Publisher and Subscriber
+
+Here is a complete example of a **Publisher** (the class that raises the event) and a **Subscriber
+** (the class that reacts to it).
+
+````csharp
+// 1. Define custom event arguments
+public class MessageEventArgs : EventArgs
+{
+    public string Message { get; }
+    public DateTime SentAt { get; }
+    public MessageEventArgs(string message) => (Message, SentAt) = (message, DateTime.Now);
+}
+
+// 2. THE PUBLISHER: Defines and raises the event
+public class MessageBroadcaster
+{
+    // The event declaration
+    public event EventHandler<MessageEventArgs>? MessageReceived;
+
+    // The method that triggers the event logic
+    public void Broadcast(string text)
+    {
+        Console.WriteLine($"[Publisher] Broadcasting: {text}");
+        OnMessageReceived(text);
+    }
+
+    // Standard 'On' pattern for raising the event
+    protected virtual void OnMessageReceived(string text)
+    {
+        MessageReceived?.Invoke(this, new MessageEventArgs(text));
+    }
+}
+
+// 3. THE SUBSCRIBER: Attaches behavior to the publisher's event
+public class LoggingService
+{
+    public void Subscribe(MessageBroadcaster broadcaster)
+    {
+        // Subscribe using the += operator
+        broadcaster.MessageReceived += HandleMessage;
+    }
+
+    // The event handler method (matches the EventHandler<T> signature)
+    private void HandleMessage(object? sender, MessageEventArgs e)
+    {
+        Console.WriteLine($"[Subscriber] Logged at {e.SentAt}: {e.Message}");
+    }
+}
+
+// --- Usage ---
+var broadcaster = new MessageBroadcaster(); // The Publisher
+var logger = new LoggingService();           // The Subscriber
+
+logger.Subscribe(broadcaster);               // Attach the relationship
+broadcaster.Broadcast("Hello, Events!");     // Raise the event
+````
+
+In this example:
+
+- **`MessageBroadcaster`** is the **Publisher**. It owns the `MessageReceived` event and decides
+  when to trigger it.
+- **`LoggingService`** is the **Subscriber**. It doesn't know *how* or *when* the broadcast
+  happens; it only cares about reacting to the event when it is raised.
