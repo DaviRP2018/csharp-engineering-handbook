@@ -2,100 +2,91 @@
 
 ## Why Does It Exist?
 
-Delegates in C# exist to enable passing behavior as parameters while preserving type safety and
+Delegates in C# exist to enable passing **behavior as parameters** while preserving type safety and
 compile-time validation.
 
-The core problem delegates solve is rigid and tightly coupled code.
+The core problem delegates solve is **rigid and tightly coupled code**. Instead of a method having
+to know every possible way to perform a task, it can receive the "how" as a parameter.
 
 ## The Problem It Solves
 
-Before delegates (or without them), you typically had to:
+Before delegates (or without them), extending behavior often required:
 
-- Hardcode logic using `if/else` or `switch`
-- Create many subclasses just to change behavior
-- Duplicate code for slight variations
-  This leads to poor extensibility and violates principles like Open/Closed Principle.
+- **Hardcoding logic** using `if/else` or `switch` statements.
+- **Creating deep inheritance hierarchies** just to change one small piece of logic.
+- **Code duplication** for slight variations in processing.
+
+This violates the **Open/Closed Principle** (code should be open for extension but closed for
+modification).
+
+### Without Delegates (The Hard Way)
+
+If you want to support different ways of processing an order, you might end up with code like this:
+
+````csharp
+void ProcessAll(IEnumerable<Order> orders, string type) 
+{
+    foreach(var order in orders) 
+    {
+        if (type == "standard") { /* ... logic ... */ }
+        else if (type == "express") { /* ... logic ... */ }
+        else if (type == "international") { /* ... logic ... */ }
+    }
+}
+````
+
+Every time you add a new shipping method, you must modify this method, increasing the risk of bugs.
+
+### With Delegates (The Extensible Way)
+
+With delegates, the method doesn't care about the "type" anymore. It just executes the behavior
+provided:
+
+````csharp
+void ProcessAll(IEnumerable<Order> orders, Action<Order> processor) 
+{
+    foreach(var order in orders) 
+    {
+        processor(order);
+    }
+}
+````
 
 ## Creating A Delegate
 
-A delegate in C# looks and acts very much like a traditional function pointer that you may have
-seen or header about from other programming languages. A traditional function pointer is exactly
-what is sounds like, a way to point to a particular method. You could have a method that accepts a
-function pointer, so that you have a way to extend its behavior or receive a callback when that
-method completes. In C#, a function pointer is known as a delegate. However, out of the box, the C#
-delegate provides a bit more functionality.
+A delegate is essentially a **type-safe function pointer**. It defines a contract (a method
+signature) that any assigned method must fulfill.
 
-Think of a delegate as a way to represent the required method signature. Whenever you define that
-you want to use a delegate, the consumer of the delegate knows exactly what the function you will
-point to will return, as well as what the expected parameters are. You can construct a delegate
-by introduction the delegate keyword. You then proceed to delegate the method signature.
+### 1. Defining the Delegate
 
-For example, here's a delegate that returns an Order and has two parameters. One of them is Item,
-and the second parameter is an integer representing the quantity.
+You use the `delegate` keyword followed by the return type and parameters. Think of it as an "
+interface for a single method."
 
 ````csharp
-delegate Order Buy (Item item, int quantity);
+public delegate Order ProcessOrder(Item item, int quantity);
 ````
 
-Nothing in this declaration defines what the method will do with its parameters or what result it
-will return.
+### 2. Matching the Signature
 
-These two different methods both match the signature defined by the delegate
+Any method that matches this signature (same return type and parameters) can be assigned to this
+delegate.
 
 ````csharp
-Order AddToCart (Item item, int quantity) {...}
-ProcessedOrder BuyNow (Item item, int quantity) {...}
+Order AddToCart(Item item, int quantity) { ... }
+Order BuyNow(Item item, int quantity) { ... }
+
+// Both are valid assignments
+ProcessOrder handler = AddToCart;
+handler = BuyNow;
 ````
 
-(ProcessedOrder inherits from Order)
-One defines that it returns an Order, while the other returns a subclass type called
-ProcessedOrder. The return type supports covariance, while the delegate parameter supports
-contravariance.
-This means a method with the return type object wouldn't match our defined delegate as you cannot
-use a less derived object when matching the return type. On the other hand, since the parameters
-support contravariance, you can change the time parameter to the object, and that would work.
-The delegate can then be referenced throughout the application using its name. This means that
-whenever we declare that we want to use this defined delegate, both of these methods could be
-viable references. Whoever uses the delegate doesn't need to care about the implementation. All it
-knows is about is the return type and the parameters.
-
-````csharp
-delegate Order Buy(Item item, int quantity);
-
-void BuyAll(IEnumerable<Item> items, Buy buy) 
-{
-    foreach(var item in items) 
-    {
-        buy(item, 1);  // <--- Could be either AddToCart or BuyNow
-    }
-}
-````
-
-This removes the need for conditionals
-
-````csharp
-void BuyAll(IEnumerable<Item> items, string buyType) 
-{
-    foreach(var item in items) 
-    {
-        if (buyType == "national") 
-        {
-            ... // Logic to process national order
-            return
-        }
-        if (buyType == "international") 
-        {
-            ... // Logic to process international order
-            return
-        }
-        ... // More ifs
-    }
-}
-````
+> [!TIP]
+> Delegates support **Multicast**, meaning a single delegate variable can hold references to
+> multiple methods. When invoked, they are called in the order they were added using the `+=`
+> operator.
 
 ## Covariance & Contravariance
 
-Both are mechanisms to change hierarchy, mainly used in generics and delegates.
 
 | Type           | What changes   | Safe substitution rule   | Keyword |
 |----------------|----------------|--------------------------|---------|
@@ -103,7 +94,6 @@ Both are mechanisms to change hierarchy, mainly used in generics and delegates.
 | Contravariance | Parameter type | Can accept more generic  | `in`    |
 
 The real rule is:
-
 - Outputs can be more specific
 - Inputs can be more generic
 
@@ -269,60 +259,37 @@ orderProcessor.OnProduceShippingLabel -= MyMagicMethod;
 
 ## Built-in Delegates
 
-C# provides a set of built-in generic delegates that cover the vast majority of use cases.  
-In most scenarios, you should prefer these instead of defining custom delegates.
+C# provides a set of built-in generic delegates that cover 99% of use cases. **You should prefer
+these** over custom delegates unless you need a very specific domain name for clarity.
 
-You typically only create custom delegates when:
+### 1. `Action<...>`
 
-- You need a more expressive name for readability
-- You require specific constraints or semantics (e.g., events)
+Used for methods that **return void**.
 
-### Common built-in delegates:
+- `Action`: No parameters.
+- `Action<T1, T2, ...>`: Up to 16 parameters.
 
-- `Func<T, TResult>`
+### 2. `Func<..., TResult>`
 
-Represents a method that **returns a value**.  
-Can take 0 to 16 input parameters, where the last type is always the return type.
+Used for methods that **return a value**.
 
-Example:
+- `Func<TResult>`: No parameters, returns `TResult`.
+- `Func<T, TResult>`: One parameter, returns `TResult`. The **last** type argument is always the
+  return type.
 
-````csharp
-Func<int, int, int> sum = (a, b) => a + b;
-````
+### 3. `Predicate<T>`
 
-- `Action<T>`
+Used for methods that return a `bool`.
 
-Represents a method that does not return a value (void).
-Can take 0 to 16 input parameters.
+- Equivalent to `Func<T, bool>`.
+- Commonly used in collections (e.g., `List.Find`).
 
-Example:
+### 4. `EventHandler` & `EventHandler<T>`
 
-````csharp
-Action<string> print = message => Console.WriteLine(message);
-````
+The standard pattern for **Events**.
 
-- Predicate<T>
-
-Represents a method that returns a boolean, typically used for conditions.
-
-Equivalent to:
-`Func<T, bool>`
-
-Example:
-
-````csharp
-Predicate<int> isEven = x => x % 2 == 0;
-````
-
-- EventHandler and EventHandler<TEventArgs>
-
-Used specifically for event patterns in .NET. Discussed later.
-
-Example:
-
-````csharp
-public event EventHandler<MyEventArgs> OnSomethingHappened;
-````
+- `(object sender, EventArgs e)`
+- Discussed in detail in the [Events](#events) section.
 
 # Lambdas
 
