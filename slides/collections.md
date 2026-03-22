@@ -1,0 +1,1 @@
+﻿# Collections (generic collections, concurrent colletions, immutable collections, hashset<>)

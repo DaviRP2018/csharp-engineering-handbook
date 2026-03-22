@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{4C397C37-DDE7-4F7B-B30E-D4819974CB68}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "slides", "slides", "{7CEEB6DD-130D-47B5-A48A-C8E56FFE74E2}"
+	ProjectSection(SolutionItems) = preProject
+		slides\linq.md = slides\linq.md
+		slides\delegates.md = slides\delegates.md
+		slides\flaggedEnums.md = slides\flaggedEnums.md
+		slides\async.md = slides\async.md
+		slides\collections.md = slides\collections.md
+		slides\disposable.md = slides\disposable.md
+		slides\span.md = slides\span.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Linq", "examples\Linq\Linq.csproj", "{6760A095-97CD-450B-BF7E-0EAF66853FFE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Delegates", "examples\Delegates\Delegates.csproj", "{1025DFD5-A8AC-47E0-B853-49EEA070289D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6760A095-97CD-450B-BF7E-0EAF66853FFE} = {4C397C37-DDE7-4F7B-B30E-D4819974CB68}
+		{1025DFD5-A8AC-47E0-B853-49EEA070289D} = {4C397C37-DDE7-4F7B-B30E-D4819974CB68}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6760A095-97CD-450B-BF7E-0EAF66853FFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6760A095-97CD-450B-BF7E-0EAF66853FFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6760A095-97CD-450B-BF7E-0EAF66853FFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6760A095-97CD-450B-BF7E-0EAF66853FFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1025DFD5-A8AC-47E0-B853-49EEA070289D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1025DFD5-A8AC-47E0-B853-49EEA070289D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1025DFD5-A8AC-47E0-B853-49EEA070289D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1025DFD5-A8AC-47E0-B853-49EEA070289D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
