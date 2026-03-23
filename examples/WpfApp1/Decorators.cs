@@ -2,6 +2,7 @@
 
 namespace WpfApp1;
 
+[Obsolete("Adds a lot of complexity to provide async examples")]
 public class ButtonDecorator
 {
     private readonly Action<string> _logAction;

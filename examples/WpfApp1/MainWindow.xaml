@@ -21,13 +21,13 @@
                          Foreground="Green" />
 
             <Button x:Name="HeavyWorkButton"
-                    Content="Start Heavy Work (Blocks UI Thread)"
+                    Content="Start Heavy Work"
                     Margin="0,30,0,0"
                     Padding="10"
                     Click="HeavyWorkButton_OnClick" />
 
             <Button x:Name="CycleColorButton"
-                    Content="Cycle Color (Green -> Red -> Blue -> Yellow)"
+                    Content="Cycle Color"
                     Margin="0,10,0,0"
                     Padding="10"
                     Click="CycleColorButton_OnClick" />
