@@ -8,9 +8,10 @@
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
+        <!-- left side -->
         <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
             <TextBlock Text="WPF Async Demonstration" FontSize="20" Margin="0,0,0,20"
                        HorizontalAlignment="Center" />
@@ -38,9 +39,14 @@
                        Foreground="DarkGreen" />
         </StackPanel>
 
+        <!-- right side -->
         <StackPanel Grid.Column="1" Margin="20,0,0,0">
             <TextBlock Text="Queued Jobs" FontWeight="Bold" Margin="0,0,0,5" />
-            <ListBox x:Name="JobsListBox" Height="300" />
+            <ListBox x:Name="JobsListBox"
+                     Height="300"
+                     HorizontalAlignment="Stretch"
+                     ScrollViewer.CanContentScroll="False"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" />
         </StackPanel>
     </Grid>
 </Window>

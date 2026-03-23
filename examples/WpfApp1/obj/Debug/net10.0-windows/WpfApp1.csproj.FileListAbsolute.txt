@@ -6,7 +6,6 @@ C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfAp
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\MainWindow.g.cs
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\App.g.cs
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\WpfApp1_MarkupCompile.cache
-C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\WpfApp1_MarkupCompile.lref
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\MainWindow.baml
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\WpfApp1.g.resources
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\WpfApp1\obj\Debug\net10.0-windows\WpfApp1.GeneratedMSBuildEditorConfig.editorconfig
