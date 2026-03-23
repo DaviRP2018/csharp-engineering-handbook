@@ -1,0 +1,46 @@
+﻿<Window x:Class="WpfApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="200" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="WPF Async Demonstration" FontSize="20" Margin="0,0,0,20"
+                       HorizontalAlignment="Center" />
+
+            <TextBlock Text="Indeterminate Progress Bar (Visual Work):" Margin="0,10,0,5" />
+            <ProgressBar x:Name="MainProgressBar" IsIndeterminate="True" Height="20" Width="300"
+                         Foreground="Green" />
+
+            <Button x:Name="HeavyWorkButton"
+                    Content="Start Heavy Work (Blocks UI Thread)"
+                    Margin="0,30,0,0"
+                    Padding="10"
+                    Click="HeavyWorkButton_OnClick" />
+
+            <Button x:Name="CycleColorButton"
+                    Content="Cycle Color (Green -> Red -> Blue -> Yellow)"
+                    Margin="0,10,0,0"
+                    Padding="10"
+                    Click="CycleColorButton_OnClick" />
+
+            <TextBlock x:Name="StatusTextBlock"
+                       Text="Status: Ready"
+                       Margin="0,10,0,0"
+                       HorizontalAlignment="Center"
+                       Foreground="DarkGreen" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Margin="20,0,0,0">
+            <TextBlock Text="Queued Jobs" FontWeight="Bold" Margin="0,0,0,5" />
+            <ListBox x:Name="JobsListBox" Height="300" />
+        </StackPanel>
+    </Grid>
+</Window>

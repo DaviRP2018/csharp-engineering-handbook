@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Delegates;
-using Delegates.Domain;
 
 Order[] orders = new[]
 {

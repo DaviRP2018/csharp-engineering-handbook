@@ -1,17 +1,17 @@
-﻿namespace Delegates.Domain;
+﻿namespace Delegates;
 
 public class Order
 {
+    public Order()
+    {
+        OrderNumber = Guid.NewGuid();
+    }
+
     public Guid OrderNumber { get; set; }
     public ShippingProvider ShippingProvider { get; set; }
     public int Total { get; }
     public bool IsReadyForShipment { get; set; } = true;
     public IEnumerable<Item> LineItems { get; set; }
-
-    public Order()
-    {
-        OrderNumber = Guid.NewGuid();
-    }
 }
 
 public class ProcessedOrder : Order

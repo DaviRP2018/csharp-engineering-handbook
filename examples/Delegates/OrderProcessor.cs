@@ -1,6 +1,4 @@
-﻿using Delegates.Domain;
-
-namespace Delegates;
+﻿namespace Delegates;
 
 public class OrderProcessor
 {

@@ -12,3 +12,4 @@ C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\Deleg
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\Delegates\obj\Debug\net10.0\Delegates.pdb
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\Delegates\obj\Debug\net10.0\Delegates.genruntimeconfig.cache
 C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\Delegates\obj\Debug\net10.0\ref\Delegates.dll
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\Delegates\obj\Debug\net10.0\Delegates.sourcelink.json

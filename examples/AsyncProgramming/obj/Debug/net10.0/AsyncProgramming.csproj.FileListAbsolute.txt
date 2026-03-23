@@ -1,0 +1,16 @@
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\bin\Debug\net10.0\AsyncProgramming.exe
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\bin\Debug\net10.0\AsyncProgramming.deps.json
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\bin\Debug\net10.0\AsyncProgramming.runtimeconfig.json
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\bin\Debug\net10.0\AsyncProgramming.dll
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\bin\Debug\net10.0\AsyncProgramming.pdb
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.AssemblyInfoInputs.cache
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.AssemblyInfo.cs
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.csproj.CoreCompileInputs.cache
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.sourcelink.json
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.dll
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\refint\AsyncProgramming.dll
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.pdb
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\AsyncProgramming.genruntimeconfig.cache
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\obj\Debug\net10.0\ref\AsyncProgramming.dll
+C:\Users\Davi.Rodriguez\RiderProjects\csharp-engineering-handbook\examples\AsyncProgramming\bin\Debug\net10.0\Data\StockPrices_Small.csv

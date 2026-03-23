@@ -1,4 +1,4 @@
-﻿namespace Delegates.Domain;
+﻿namespace Delegates;
 
 public class ShippingProvider
 {
