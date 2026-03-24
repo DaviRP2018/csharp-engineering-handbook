@@ -79,7 +79,7 @@ set operations and existence checks.
 
 ### When to use it?
 
-Use `HashSet<T>` when you need to ensure that a collection contains no duplicates and you
+Use `HashSet<T>` when you need to ensure that a collection contains no duplicates, and you
 frequently need to check if an item exists within the set.
 
 ```csharp
@@ -192,6 +192,8 @@ var modified = original.Add("Blue");
 Console.WriteLine(original.Count); // Output: 2
 Console.WriteLine(modified.Count); // Output: 3
 ```
+
+Let's see in WPF form the memory usage
 
 ---
 
