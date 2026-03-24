@@ -99,15 +99,11 @@ public class Laboratory
 
     public async Task Lab_08_ExceptionHandling()
     {
-        try
+        await Task.Run(() =>
         {
-            await Task.Run(() => throw new InvalidOperationException("Something went wrong"));
-        }
-        catch (InvalidOperationException ex)
-        {
-            // Exceptions in Tasks are captured and rethrown when awaited.
-            Debug.WriteLine($"Caught expected exception: {ex.Message}");
-        }
+            Thread.Sleep(6000);
+            throw new InvalidOperationException("Something went wrong");
+        });
     }
 
     public async Task Lab_09_CancellationToken(CancellationToken cancellationToken)
@@ -121,6 +117,27 @@ public class Laboratory
             Debug.WriteLine("Operation was cancelled in Lab_08");
             throw;
         }
+    }
+
+    public async Task<string> Lab_10_GetSubjectAsync()
+    {
+        await Task.Delay(Random.Shared.Next(100, 1500));
+        Console.WriteLine("Completed cat");
+        return "the cat";
+    }
+
+    public async Task<string> Lab_10_GetVerbAsync()
+    {
+        await Task.Delay(Random.Shared.Next(100, 1500));
+        Console.WriteLine("Completed eat");
+        return "eats";
+    }
+
+    public async Task<string> Lab_10_GetObjectAsync()
+    {
+        await Task.Delay(Random.Shared.Next(100, 1500));
+        Console.WriteLine("Completed pizza");
+        return "pizza";
     }
 
     private void HeavyOperation()

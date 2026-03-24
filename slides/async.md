@@ -46,6 +46,17 @@ When the dish is ready, it doesn't have to be the very same waiter who delivers 
 waiter can pick it up and serve the customer. Just like a thread manager would do, it delegates
 any available thread to pick up the completed task and continue the execution of the code.
 
+### Introduction to Task
+
+A `Task` represents a "promise" or a "future" operation that will complete at some point.
+
+- `Task`: Represents an operation that returns no value.
+- `Task<T>`: Represents an operation that will eventually return a value of type `T`.
+
+Tasks are managed by the **Task Scheduler**, which decides which thread should run which task.
+Unlike low-level threads, Tasks provide a high-level API for composition (like `Task.WhenAll`,
+`Task.WhenAny`, and continuations).
+
 Let's see some examples: Lab 1 and 2
 
 ### The Difference Between Parallel and Async Code
@@ -144,6 +155,24 @@ In asynchronous methods, exceptions are captured and placed inside the returned 
 - **Capture**: Always wrap your `await` calls in `try-catch` to handle potential failures
   gracefully.
 
+Let's see on Lab 8
+
+### Cancellation Token and Stopping a Task
+
+In many scenarios, you may need to stop a long-running task (e.g., the user cancelled the operation
+or a timeout occurred). .NET uses the `CancellationTokenSource` and `CancellationToken` mechanism
+for **cooperative cancellation**:
+
+1. **`CancellationTokenSource`**: The object that triggers the cancellation.
+2. **`CancellationToken`**: The token passed into the asynchronous method.
+
+The task must periodically check the token using `token.ThrowIfCancellationRequested()` or pass the
+token to other async methods (like `Task.Delay(1000, token)`). Cancellation is "cooperative"
+because the task is responsible for checking the token and shutting down gracefully; the system
+does not forcibly kill the execution.
+
+Let's see on Lab 9
+
 ### Understanding Continuation
 
 A **Continuation** is a piece of code that runs after an asynchronous operation completes. In the
@@ -153,16 +182,7 @@ Behind the scenes, the compiler uses `Task.ContinueWith` to attach these continu
 completes, the "state machine" transitions to the next state, executing the remaining code. This
 allows for complex sequences of operations without blocking threads.
 
-### Introduction to Task
-
-A `Task` represents a "promise" or a "future" operation that will complete at some point.
-
-- `Task`: Represents an operation that returns no value.
-- `Task<T>`: Represents an operation that will eventually return a value of type `T`.
-
-Tasks are managed by the **Task Scheduler**, which decides which thread should run which task.
-Unlike low-level threads, Tasks provide a high-level API for composition (like `Task.WhenAll`,
-`Task.WhenAny`, and continuations).
+We will see on Lab 10
 
 ### How to Obtain Result from a Task
 
@@ -195,17 +215,5 @@ Beyond `try-catch`, you can manage success and failure by inspecting the task's 
 Using these properties can be useful when you want to handle results without throwing/catching
 exceptions immediately, or when processing collections of tasks.
 
-### Cancellation Token and Stopping a Task
 
-In many scenarios, you may need to stop a long-running task (e.g., the user cancelled the operation
-or a timeout occurred). .NET uses the `CancellationTokenSource` and `CancellationToken` mechanism
-for **cooperative cancellation**:
-
-1. **`CancellationTokenSource`**: The object that triggers the cancellation.
-2. **`CancellationToken`**: The token passed into the asynchronous method.
-
-The task must periodically check the token using `token.ThrowIfCancellationRequested()` or pass the
-token to other async methods (like `Task.Delay(1000, token)`). Cancellation is "cooperative"
-because the task is responsible for checking the token and shutting down gracefully; the system
-does not forcibly kill the execution.
 

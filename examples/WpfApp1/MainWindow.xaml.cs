@@ -88,7 +88,7 @@ public partial class MainWindow : Window
 
         #endregion
 
-        #region Lab 05 await usage
+        #region Lab 05 await usage ================================================================
 
         // Using `Result` at the wrong time
         // var stuffFromDb = _lab.Lab_05_GetStuffFromDbAsync().Result;
@@ -132,7 +132,7 @@ public partial class MainWindow : Window
         #region Lab 07 Not awaiting Task & Exception handling it ==================================
 
         // What happens if we don't await a task? Will it execute in full "somewhere"?
-        _lastTask = _lab.Lab_07_AsyncTaskException();
+        // _lastTask = _lab.Lab_07_AsyncTaskException();
         /*
          * calling an async Task method without awaiting it. This creates what's called a
          * "fire-and-forget" scenario. Here's what happens:
@@ -144,56 +144,142 @@ public partial class MainWindow : Window
          */
 
         // What if we try to catch the exception?
-        try
-        {
-            _lastTask = _lab.Lab_07_AsyncTaskException(); // This doesn't throw here!
-            // The `try-catch` block only catches exceptions that occur **synchronously** during
-            // the method call. Since `Lab_06_AsyncTaskException()` returns immediately with a
-            // `Task` object, no exception is thrown at this point. The actual exception happens
-            // later, asynchronously, when the task executes this line:
-        }
-        catch (Exception err)
-        {
-            Console.WriteLine(err); // This will never execute
-        }
+        // try
+        // {
+        //     _lastTask = _lab.Lab_07_AsyncTaskException(); // This doesn't throw here!
+        //     // The `try-catch` block only catches exceptions that occur **synchronously** during
+        //     // the method call. Since `Lab_06_AsyncTaskException()` returns immediately with a
+        //     // `Task` object, no exception is thrown at this point. The actual exception happens
+        //     // later, asynchronously, when the task executes this line:
+        // }
+        // catch (Exception err)
+        // {
+        //     Console.WriteLine(err); // This will never execute
+        // }
 
         #endregion
 
-        #region Catching an exception
+        #region Lab 08 Catching an exception ======================================================
 
-        try
-        {
-        }
-        catch (Exception err)
-        {
-            PrintToMessageLog(err.ToString());
-        }
+        // try
+        // {
+        //     _lastTask = _lab.Lab_08_ExceptionHandling();
+        //     await _lastTask;
+        // }
+        // catch (InvalidOperationException err)
+        // {
+        //     PrintToMessageLog(err.ToString());
+        // }
+
+        // Handling multiple tasks
+        // var task1 = _lab.Lab_02_NonBlockingWork();
+        // var task2 = _lab.Lab_07_AsyncTaskException();
+        // var task3 = _lab.Lab_05_GetStuffFromDbAsync();
+        // var task4 = _lab.Lab_08_ExceptionHandling();
+        //
+        // // var tasks = new[] { task1, task2, task3, task4 };
+        // var tasksDict = new Dictionary<string, Task>
+        // {
+        //     { "Cooking rice", task1 },
+        //     { "Preparing meat", task2 },
+        //     { "Cleaning plates", task3 },
+        //     { "Seasoning", task4 },
+        // };
+        //
+        // try
+        // {
+        //     await Task.WhenAll(tasksDict.Values);
+        // }
+        // catch
+        // {
+        //     foreach (var (taskName, task) in tasksDict)
+        //     {
+        //         if (task.IsFaulted)
+        //         {
+        //             foreach (var ex in task.Exception!.InnerExceptions)
+        //             {
+        //                 PrintToMessageLog($"Task '{taskName}' failed: {ex.Message}");
+        //             }
+        //         }
+        //     }
+        // }
 
         #endregion
 
         #region Lab 09 Trying to use Cancellation Token ===========================================
 
-        try
-        {
-            if (_cancellationTokenSource.IsCancellationRequested)
-            {
-                _cancellationTokenSource.Dispose();
-                _cancellationTokenSource = new CancellationTokenSource();
-            }
-
-            _lastTask = _lab.Lab_09_CancellationToken(_cancellationTokenSource.Token);
-            await _lastTask;
-        }
-        catch (OperationCanceledException)
-        {
-            PrintToMessageLog("Task was cancelled");
-        }
-        catch (Exception err)
-        {
-            PrintToMessageLog($"Error: {err.Message}");
-        }
+        // try
+        // {
+        //     if (_cancellationTokenSource.IsCancellationRequested)
+        //     {
+        //         _cancellationTokenSource.Dispose();
+        //         _cancellationTokenSource = new CancellationTokenSource();
+        //     }
+        //
+        //     _lastTask = _lab.Lab_09_CancellationToken(_cancellationTokenSource.Token);
+        //     await _lastTask;
+        // }
+        // catch (OperationCanceledException)
+        // {
+        //     PrintToMessageLog("Task was cancelled");
+        // }
+        // catch (Exception err)
+        // {
+        //     PrintToMessageLog($"Error: {err.Message}");
+        // }
 
         #endregion
+
+        #region Lab 10 Handling multiple tasks ====================================================
+
+        // Funny multiple tasks with WhenAny ======================================================
+        // var sentence = "";
+        // var tasks = new List<Task<string>>
+        // {
+        //     _lab.Lab_10_GetSubjectAsync(),
+        //     _lab.Lab_10_GetVerbAsync(),
+        //     _lab.Lab_10_GetObjectAsync()
+        // };
+        //
+        // var sentence = "";
+        //
+        // while (tasks.Any())
+        // {
+        //     var finishedTask = await Task.WhenAny(tasks);
+        //     sentence += finishedTask.Result + " ";
+        //     tasks.Remove(finishedTask);
+        // }
+
+        // ContinueWith ===========================================================================
+        // var subjectTask = _lab.Lab_10_GetSubjectAsync();
+        //
+        // var verbTask = subjectTask.ContinueWith(t =>
+        //     _lab.Lab_10_GetVerbAsync()
+        // ).Unwrap();
+        //
+        // var objectTask = verbTask.ContinueWith(t =>
+        //     _lab.Lab_10_GetObjectAsync()
+        // ).Unwrap();
+        //
+        // var subject = await subjectTask;
+        // var verb = await verbTask;
+        // var obj = await objectTask;
+        //
+        // var sentence = $"{subject} {verb} {obj}";
+
+
+        // When any, think of multiple API calls to check what is fastest =========================
+        var subject = _lab.Lab_10_GetSubjectAsync();
+        var verb = _lab.Lab_10_GetVerbAsync();
+        var obj = _lab.Lab_10_GetObjectAsync();
+
+        var first = await Task.WhenAny(subject, verb, obj);
+        var sentence = await first;
+
+        PrintToMessageLog(sentence);
+
+        #endregion
+
 
         StatusTextBlock.Text = "Status: Work Completed";
         StatusTextBlock.Foreground = Brushes.DarkGreen;
