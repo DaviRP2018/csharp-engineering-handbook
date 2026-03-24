@@ -11,8 +11,11 @@ public partial class MainWindow : Window
 {
     private const int ItemCount = 10_000_000;
     private const int LookupCount = 1000;
+    private readonly Queue<string> _queue = new();
+    private readonly Stack<string> _stack = new();
     private HashSet<int>? _cachedHashSet;
     private List<int>? _cachedList;
+    private int _itemCounter = 1;
 
     public MainWindow()
     {
@@ -92,8 +95,51 @@ public partial class MainWindow : Window
     {
         _cachedList = null;
         _cachedHashSet = null;
+        _queue.Clear();
+        _stack.Clear();
+        _itemCounter = 1;
+        UpdateFifoLifoDisplay();
         GC.Collect();
         GC.WaitForPendingFinalizers();
         statusText.Text = "Status: Memory Cleared.";
+    }
+
+    private void btnEnqueue_Click(object sender, RoutedEventArgs e)
+    {
+        _queue.Enqueue($"Item {_itemCounter++}");
+        UpdateFifoLifoDisplay();
+    }
+
+    private void btnDequeue_Click(object sender, RoutedEventArgs e)
+    {
+        if (_queue.Count > 0)
+        {
+            _queue.Dequeue();
+            UpdateFifoLifoDisplay();
+        }
+    }
+
+    private void btnPush_Click(object sender, RoutedEventArgs e)
+    {
+        _stack.Push($"Item {_itemCounter++}");
+        UpdateFifoLifoDisplay();
+    }
+
+    private void btnPop_Click(object sender, RoutedEventArgs e)
+    {
+        if (_stack.Count > 0)
+        {
+            _stack.Pop();
+            UpdateFifoLifoDisplay();
+        }
+    }
+
+    private void UpdateFifoLifoDisplay()
+    {
+        listQueue.Items.Clear();
+        foreach (var item in _queue) listQueue.Items.Add(item);
+
+        listStack.Items.Clear();
+        foreach (var item in _stack) listStack.Items.Add(item);
     }
 }

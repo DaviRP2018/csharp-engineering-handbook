@@ -6,37 +6,82 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="650" Width="800">
     <Grid>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="Collections Performance Comparison" FontSize="18" Margin="0,0,0,20"
-                       HorizontalAlignment="Center" />
+        <TabControl Margin="10">
+            <TabItem Header="Performance">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Collections Performance Comparison" FontSize="18"
+                               Margin="0,0,0,20"
+                               HorizontalAlignment="Center" />
 
-            <GroupBox Header="Memory (ArrayList vs List&lt;int&gt;)" Margin="0,0,0,20">
-                <StackPanel Margin="10">
-                    <Button x:Name="btnOld" Content="Generate 10M Items (ArrayList - Boxed)"
-                            Width="280"
-                            Height="40" Margin="5" Click="btnOld_Click" />
-                    <Button x:Name="btnNew"
-                            Content="Generate 10M Items (List&lt;int&gt; - Generic)"
-                            Width="280" Height="40" Margin="5" Click="btnNew_Click" />
+                    <GroupBox Header="Memory (ArrayList vs List&lt;int&gt;)" Margin="0,0,0,20">
+                        <StackPanel Margin="10">
+                            <Button x:Name="btnOld"
+                                    Content="Generate 10M Items (ArrayList - Boxed)"
+                                    Width="280"
+                                    Height="40" Margin="5" Click="btnOld_Click" />
+                            <Button x:Name="btnNew"
+                                    Content="Generate 10M Items (List&lt;int&gt; - Generic)"
+                                    Width="280" Height="40" Margin="5" Click="btnNew_Click" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Lookup Performance (HashSet vs List)" Margin="0,0,0,20">
+                        <StackPanel Margin="10">
+                            <Button x:Name="btnListLookup" Content="Run List Lookup (O(n))"
+                                    Width="280"
+                                    Height="40" Margin="5" Click="btnListLookup_Click" />
+                            <Button x:Name="btnHashLookup" Content="Run HashSet Lookup (O(1))"
+                                    Width="280"
+                                    Height="40" Margin="5" Click="btnHashLookup_Click" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <Button x:Name="btnClear" Content="Clear Memory" Width="280" Height="40"
+                            Margin="5"
+                            Click="btnClear_Click" />
+                    <TextBlock x:Name="statusText" Text="Status: Idle" Margin="0,20,0,0"
+                               HorizontalAlignment="Center" />
+
+                    <ProgressBar x:Name="MainProgressBar" IsIndeterminate="True" Height="20"
+                                 Width="280"
+                                 Margin="0,20,0,0" Foreground="Green" />
                 </StackPanel>
-            </GroupBox>
+            </TabItem>
 
-            <GroupBox Header="Lookup Performance (HashSet vs List)" Margin="0,0,0,20">
-                <StackPanel Margin="10">
-                    <Button x:Name="btnListLookup" Content="Run List Lookup (O(n))" Width="280"
-                            Height="40" Margin="5" Click="btnListLookup_Click" />
-                    <Button x:Name="btnHashLookup" Content="Run HashSet Lookup (O(1))" Width="280"
-                            Height="40" Margin="5" Click="btnHashLookup_Click" />
-                </StackPanel>
-            </GroupBox>
+            <TabItem Header="FIFO &amp; LIFO">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-            <Button x:Name="btnClear" Content="Clear Memory" Width="280" Height="40" Margin="5"
-                    Click="btnClear_Click" />
-            <TextBlock x:Name="statusText" Text="Status: Idle" Margin="0,20,0,0"
-                       HorizontalAlignment="Center" />
+                    <!-- FIFO (Queue) -->
+                    <GroupBox Header="FIFO (Queue&lt;string&gt;)" Grid.Column="0" Margin="10">
+                        <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                <Button x:Name="btnEnqueue" Content="Enqueue (Add)" Height="30"
+                                        Margin="5" Click="btnEnqueue_Click" />
+                                <Button x:Name="btnDequeue" Content="Dequeue (Remove)" Height="30"
+                                        Margin="5" Click="btnDequeue_Click" />
+                            </StackPanel>
+                            <ListBox x:Name="listQueue" />
+                        </DockPanel>
+                    </GroupBox>
 
-            <ProgressBar x:Name="MainProgressBar" IsIndeterminate="True" Height="20" Width="280"
-                         Margin="0,20,0,0" Foreground="Green" />
-        </StackPanel>
+                    <!-- LIFO (Stack) -->
+                    <GroupBox Header="LIFO (Stack&lt;string&gt;)" Grid.Column="1" Margin="10">
+                        <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                <Button x:Name="btnPush" Content="Push (Add)" Height="30"
+                                        Margin="5" Click="btnPush_Click" />
+                                <Button x:Name="btnPop" Content="Pop (Remove)" Height="30"
+                                        Margin="5" Click="btnPop_Click" />
+                            </StackPanel>
+                            <ListBox x:Name="listStack" />
+                        </DockPanel>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

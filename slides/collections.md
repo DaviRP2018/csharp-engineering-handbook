@@ -18,6 +18,8 @@ older non-generic collections like `ArrayList`.
 - **Performance**: No need for boxing when storing value types, reducing GC pressure.
 - **Code Reuse**: A single implementation works for any type `T`.
 
+Let's check the WPF form to see the memory usage of ArrayList against List.
+
 ### Common Types
 
 - `List<T>`: A dynamic array that grows as needed. Best for random access by index.
@@ -60,6 +62,8 @@ var salaryMap = new Dictionary<string, decimal>
 };
 ```
 
+Let's check the WPF form in the FIFO & LIFO tab
+
 ---
 
 ## 2. HashSet<T>
@@ -88,6 +92,9 @@ if (uniqueIds.Contains(101))
     // Fast O(1) lookup
 }
 ```
+
+Let's check the WPF form in the performance tab to see
+the lookup speed of HashSet<int> against a List<int>
 
 ---
 
