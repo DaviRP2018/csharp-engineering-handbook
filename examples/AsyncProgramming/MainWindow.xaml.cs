@@ -269,14 +269,21 @@ public partial class MainWindow : Window
 
 
         // When any, think of multiple API calls to check what is fastest =========================
-        var subject = _lab.Lab_10_GetSubjectAsync();
-        var verb = _lab.Lab_10_GetVerbAsync();
-        var obj = _lab.Lab_10_GetObjectAsync();
+        // var subject = _lab.Lab_10_GetSubjectAsync();
+        // var verb = _lab.Lab_10_GetVerbAsync();
+        // var obj = _lab.Lab_10_GetObjectAsync();
+        //
+        // var first = await Task.WhenAny(subject, verb, obj);
+        // var sentence = await first;
+        //
+        // PrintToMessageLog(sentence);
 
-        var first = await Task.WhenAny(subject, verb, obj);
-        var sentence = await first;
+        #endregion
 
-        PrintToMessageLog(sentence);
+        #region Lab 11 Catching exeption and Thread scope
+
+        _lastTask = _lab.Lab_11_ContinueWith_PrintExample();
+        await _lastTask;
 
         #endregion
 

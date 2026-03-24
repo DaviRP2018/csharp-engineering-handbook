@@ -140,6 +140,44 @@ public class Laboratory
         return "pizza";
     }
 
+    public async Task Lab_11_ContinueWith_PrintExample()
+    {
+        // An exception will occur in the middle of the tasks, but the code will continue
+        var task1 = Task.Run(() =>
+        {
+            Console.WriteLine("Step 1: Starting work...");
+            Thread.Sleep(2000);
+            return 42;
+        });
+
+        var task2 = task1.ContinueWith(t =>
+        {
+            Console.WriteLine("Step 2: About to fail...");
+            Thread.Sleep(2000);
+
+            // Failure in the middle
+            throw new Exception("Something went wrong in Step 2");
+        });
+
+        var task3 = task2.ContinueWith(t =>
+        {
+            Console.WriteLine($"Status of task2: {t.Status}");
+            Console.WriteLine("Step 3: Still running after failure");
+            Thread.Sleep(2000);
+            return "This is fine (sort of)";
+        });
+
+        try
+        {
+            var result = await task3;
+            Console.WriteLine($"Final result: {result}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Caught exception: {ex.Message}");
+        }
+    }
+
     private void HeavyOperation()
     {
         var rnd = new Random();

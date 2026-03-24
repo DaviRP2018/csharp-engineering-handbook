@@ -4,7 +4,7 @@ Asynchronous programming is a fundamental pillar of modern software development,
 the .NET ecosystem. It allows applications to remain responsive while performing long-running or
 I/O-bound operations, ensuring efficient resource utilization without blocking the execution flow.
 
-### What is a Thread and How Async Treats It
+### What is a Thread and How Async Treats It?
 
 A **Thread** is the smallest unit of execution within an operating system. Creating and managing
 threads is expensive in terms of memory and CPU overhead.
@@ -36,7 +36,7 @@ handling one task at a time, but so incredibly fast we don't even notice.
 Now, a customer places an order. In a synchronous scenario, the waiter walks to the kitchen balcony
 to place the order and just stands there waiting for the dish to be ready, so he can deliver the
 dish to the customer. During that time, he's doing nothing else, no new orders, no serving another
-table. It's like the "restaurant UI is blocked".
+table. It's like the "restaurant UI is blocked."
 
 In an asynchronous scenario, the waiter places the order in the kitchen and immediately is
 "relieved" to go back to work, serving other tables, taking new orders, staying productive.
@@ -92,6 +92,19 @@ code:
 - **`await`**: This operator is applied to a `Task`. It suspends the execution of the method until
   the task completes. Critically, it does not block the thread; it yields control. When the task
   finishes, the method resumes.
+
+### How to Obtain Result from a Task
+
+The correct way to get a result from a `Task<T>` is using the `await` keyword:
+
+```csharp
+T result = await myTask;
+```
+
+Avoid using `.Result` or `.Wait()`. These properties/methods block the calling thread until the
+task is complete, which completely defeats the purpose of async programming and frequently leads to
+**deadlocks**, especially in environments with a SynchronizationContext (like ASP.NET or legacy UI
+apps).
 
 ### Be careful when using Task
 
@@ -149,7 +162,7 @@ In asynchronous methods, exceptions are captured and placed inside the returned 
 - **Propagation**: When you `await` a task, if that task faulted, the exception is re-thrown at the
   point of the `await`. This allows you to use standard `try-catch` blocks as if the code were
   synchronous.
-- **Task.WhenAll**: When awaiting multiple tasks simultaneously, if several fail, the `await` will
+- **Task.WhenAll**: When awaiting multiple tasks simultaneously, if some fail, the `await` will
   only throw the first exception. To examine all exceptions, you can inspect the `Task.Exception`
   property (which is an `AggregateException`) of the task returned by `WhenAll`.
 - **Capture**: Always wrap your `await` calls in `try-catch` to handle potential failures
@@ -159,7 +172,7 @@ Let's see on Lab 8
 
 ### Cancellation Token and Stopping a Task
 
-In many scenarios, you may need to stop a long-running task (e.g., the user cancelled the operation
+In many scenarios, you may need to stop a long-running task (e.g., the user canceled the operation
 or a timeout occurred). .NET uses the `CancellationTokenSource` and `CancellationToken` mechanism
 for **cooperative cancellation**:
 
@@ -173,6 +186,13 @@ does not forcibly kill the execution.
 
 Let's see on Lab 9
 
+### Nested Async Operations
+
+Asynchronous operations can be nested and composed. An `async` method can call other `async`
+methods, creating a chain of tasks. The `await` keyword ensures that the chain is followed
+correctly. It is important to "async all the way up" meaning you should avoid mixing synchronous
+and asynchronous code in the same call stack to prevent blocking and deadlocks.
+
 ### Understanding Continuation
 
 A **Continuation** is a piece of code that runs after an asynchronous operation completes. In the
@@ -184,25 +204,8 @@ allows for complex sequences of operations without blocking threads.
 
 We will see on Lab 10
 
-### How to Obtain Result from a Task
-
-The correct way to get a result from a `Task<T>` is using the `await` keyword:
-
-```csharp
-T result = await myTask;
-```
-
-Avoid using `.Result` or `.Wait()`. These properties/methods block the calling thread until the
-task is complete, which completely defeats the purpose of async programming and frequently leads to
-**deadlocks**, especially in environments with a SynchronizationContext (like ASP.NET or legacy UI
-apps).
-
-### Nested Async Operations
-
-Asynchronous operations can be nested and composed. An `async` method can call other `async`
-methods, creating a chain of tasks. The `await` keyword ensures that the chain is followed
-correctly. It is important to "async all the way up"—meaning you should avoid mixing synchronous
-and asynchronous code in the same call stack to prevent blocking and deadlocks.
+Be careful though, because `Task.ContinueWith` **executes** when the **Task completes** no matter
+if it's successful, faulted, or canceled.
 
 ### Handling Success and Failure
 
@@ -213,7 +216,6 @@ Beyond `try-catch`, you can manage success and failure by inspecting the task's 
 - **`IsCanceled`**: Returns true if the task was stopped via a `CancellationToken`.
 
 Using these properties can be useful when you want to handle results without throwing/catching
-exceptions immediately, or when processing collections of tasks.
+exceptions immediately or when processing collections of tasks.
 
-
-
+Let's see Lab 11
