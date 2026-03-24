@@ -59,8 +59,8 @@ signature) that any assigned method must fulfill.
 
 ### 1. Defining the Delegate
 
-You use the `delegate` keyword followed by the return type and parameters. Think of it as an "
-interface for a single method."
+You use the `delegate` keyword followed by the return type and parameters. Think of it as an
+"interface for a single method."
 
 ````csharp
 public delegate Order ProcessOrder(Item item, int quantity);
