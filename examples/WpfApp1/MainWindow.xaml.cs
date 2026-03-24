@@ -13,48 +13,199 @@ public partial class MainWindow : Window
         { Brushes.Green, Brushes.Red, Brushes.Blue, Brushes.Yellow };
 
     private readonly Laboratory _lab = new();
+    private CancellationTokenSource _cancellationTokenSource = new();
 
     private int _colorIndex;
     private int _jobId;
+
+    private Task? _lastTask;
 
     public MainWindow()
     {
         InitializeComponent();
     }
 
-    private void AddJobAndScroll(string message)
+    private void PrintToMessageLog(string message)
     {
         var item = message;
         JobsListBox.Items.Add(item);
         JobsListBox.ScrollIntoView(item);
     }
 
+    private void ClearMessageLog_OnClick(object sender, RoutedEventArgs e)
+    {
+        JobsListBox.Items.Clear();
+    }
+
+    private void ShowLastTaskStatus_OnClick(object sender, RoutedEventArgs e)
+    {
+        var message = "";
+        message += $"Id: {_lastTask?.Id}\n";
+        message += $"Status: {_lastTask?.Status}\n";
+        message += $"Exception: {_lastTask?.Exception}\n";
+        message += $"IsCanceled: {_lastTask?.IsCanceled}\n";
+        message += $"IsCompleted: {_lastTask?.IsCompleted}\n";
+        message += $"IsCompletedSuccessfully: {_lastTask?.IsCompletedSuccessfully}\n";
+        message += $"IsFaulted: {_lastTask?.IsFaulted}";
+        PrintToMessageLog(message);
+    }
+
     private async void HeavyWorkButton_OnClick(object sender, RoutedEventArgs e)
     {
         _jobId++;
         var jobName = $"Heavy Work #{_jobId}";
-        AddJobAndScroll($"{jobName} - Started at {DateTime.Now:T}");
+        PrintToMessageLog($"{jobName} - Started at {DateTime.Now:T}");
         var stopwatch = Stopwatch.StartNew();
 
 
         StatusTextBlock.Text = "Status: Busy";
         StatusTextBlock.Foreground = Brushes.Red;
 
-        // Simulating heavy work that blocks the UI thread for random seconds
-        // var task = Task.Run(_lab.Lab1);
-        // await Task.WhenAll(task);
+        #region Lab 01 Blocking Thread ============================================================
+
         // _lab.Lab_01_BlockingWork();
 
-        var task = _lab.Lab_02_NonBlockingWork();
-        await task;
+        #endregion
 
+        #region Lab 02 Non Blocking Good Async ====================================================
+
+        // _lastTask = _lab.Lab_02_NonBlockingWork();
+        // await _lastTask;
+
+        #endregion
+
+        #region Lab 03 Using Task, but blocking ===================================================
+
+        // _lastTask = _lab.Lab_03_BlockingWaitAll();
+        // await _lastTask;
+
+        #endregion
+
+        #region Lab 04 Non Blocking When All ======================================================
+
+        // _lastTask = _lab.Lab_04_NonBlockingWhenAll();
+        // await _lastTask;
+
+        #endregion
+
+        #region Lab 05 await usage
+
+        // Using `Result` at the wrong time
+        // var stuffFromDb = _lab.Lab_05_GetStuffFromDbAsync().Result;
+        // // Many other things that could be done while getting stuff from DB...
+        // PrintToScreen("Hello?");
+        // // Finished stuff, now I really need that stuff from DB
+        // PrintToScreen($"Using '{stuffFromDb}' to do something.");
+
+        // Bad practice - Using await at the wrong time
+        // var stuffFromDb = await _lab.Lab_05_GetStuffFromDbAsync();
+        // // Many other things that could be done while getting stuff from DB...
+        // PrintToScreen("I could be doing things meanwhile... but");
+        // // Finished stuff, now I really need that stuff from DB
+        // PrintToScreen($"Using '{stuffFromDb}' to do something.");
+
+        // Good practice - Putting the task in a variable
+        // var taskStuffFromDb = _lab.Lab_05_GetStuffFromDbAsync();
+        // // Many other things that could be done while getting stuff from DB...
+        // PrintToScreen("Doing things meanwhile!");
+        // // Finished stuff, now I really need that stuff from DB
+        // var stuffFromDb = await taskStuffFromDb;
+        // PrintToScreen($"Using '{stuffFromDb}' to do something.");
+
+        #endregion
+
+        #region Lab 06 Async void =================================================================
+
+        // What happens if we run a async void method?
+        // _lab.Lab_06_AsyncVoidException();
+        // try
+        // {
+        //     _lab.Lab_06_AsyncVoidException();
+        // }
+        // catch (Exception err)
+        // {
+        //     Console.WriteLine($"Ho ho ho! Gotcha pesky bug: {err}");
+        // }
+
+        #endregion
+
+        #region Lab 07 Not awaiting Task & Exception handling it ==================================
+
+        // What happens if we don't await a task? Will it execute in full "somewhere"?
+        _lastTask = _lab.Lab_07_AsyncTaskException();
+        /*
+         * calling an async Task method without awaiting it. This creates what's called a
+         * "fire-and-forget" scenario. Here's what happens:
+         *   The method starts executing on a background thread
+         *   The calling method continues immediately without waiting
+         *   The Task object is created but ignored - it goes out of scope
+         *   Any exceptions occur asynchronously in the background
+         *
+         */
+
+        // What if we try to catch the exception?
+        try
+        {
+            _lastTask = _lab.Lab_07_AsyncTaskException(); // This doesn't throw here!
+            // The `try-catch` block only catches exceptions that occur **synchronously** during
+            // the method call. Since `Lab_06_AsyncTaskException()` returns immediately with a
+            // `Task` object, no exception is thrown at this point. The actual exception happens
+            // later, asynchronously, when the task executes this line:
+        }
+        catch (Exception err)
+        {
+            Console.WriteLine(err); // This will never execute
+        }
+
+        #endregion
+
+        #region Catching an exception
+
+        try
+        {
+        }
+        catch (Exception err)
+        {
+            PrintToMessageLog(err.ToString());
+        }
+
+        #endregion
+
+        #region Lab 09 Trying to use Cancellation Token ===========================================
+
+        try
+        {
+            if (_cancellationTokenSource.IsCancellationRequested)
+            {
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = new CancellationTokenSource();
+            }
+
+            _lastTask = _lab.Lab_09_CancellationToken(_cancellationTokenSource.Token);
+            await _lastTask;
+        }
+        catch (OperationCanceledException)
+        {
+            PrintToMessageLog("Task was cancelled");
+        }
+        catch (Exception err)
+        {
+            PrintToMessageLog($"Error: {err.Message}");
+        }
+
+        #endregion
 
         StatusTextBlock.Text = "Status: Work Completed";
         StatusTextBlock.Foreground = Brushes.DarkGreen;
 
         stopwatch.Stop();
-        AddJobAndScroll(
+        PrintToMessageLog(
             $"{jobName} - Took {stopwatch.ElapsedMilliseconds}ms - Finished at {DateTime.Now:T}");
+    }
+
+    private void CancelTask_OnClick(object sender, RoutedEventArgs e)
+    {
+        _cancellationTokenSource.Cancel();
     }
 
     private void CycleColorButton_OnClick(object sender, RoutedEventArgs e)
@@ -67,7 +218,7 @@ public partial class MainWindow : Window
             .GetProperties()
             .FirstOrDefault(p => (Color)p.GetValue(null) == c)?.Name;
 
-        AddJobAndScroll($"Cycle color: {name ?? c.ToString()}");
+        PrintToMessageLog($"Cycle color: {name ?? c.ToString()}");
         _colorIndex = (_colorIndex + 1) % _colors.Length;
         MainProgressBar.Foreground = newColor;
     }

@@ -41,18 +41,18 @@ internal class Program
         await Task.WhenAll(task1, task2, task3, task4);
         /*
          * WaitAll
-         *  Syncronous awaiting
+         *  Synchronous awaiting
          *  Blocks main thread
-         *  Uses traditional block mecanism
-         *  Doesn't cooperates with async/await
+         *  Uses traditional block mechanism
+         *  Doesn't cooperate with async/await
          *
          * WhenAll
-         *  Assyncronous awaiting
-         *  Doesn't blocks main thread
+         *  Asynchronous awaiting
+         *  Doesn't block main thread
          *  Register continuation
          *  Cooperates with Task Scheduler
          *
-         * Both waits, but in different maners
+         * Both waits, but in different manners
          */
         var task5 = Task.Run(() => HeavyOperation(data, "Task 5.1"), cancellationToken);
         var task6 = Task.Run(() => HeavyOperation(data, "Task 6.1"), cancellationToken);

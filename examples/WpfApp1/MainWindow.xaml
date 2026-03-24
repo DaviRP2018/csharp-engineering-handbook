@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="550" Width="800">
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -26,11 +26,29 @@
                     Padding="10"
                     Click="HeavyWorkButton_OnClick" />
 
+            <Button x:Name="CancelTask"
+                    Content="Cancel Task"
+                    Margin="0,10,0,0"
+                    Padding="10"
+                    Click="CancelTask_OnClick" />
+
             <Button x:Name="CycleColorButton"
                     Content="Cycle Color"
                     Margin="0,10,0,0"
                     Padding="10"
                     Click="CycleColorButton_OnClick" />
+
+            <Button x:Name="ShowLastTaskStatus"
+                    Content="Show Last Task Status"
+                    Margin="0, 10, 0, 0"
+                    Padding="10"
+                    Click="ShowLastTaskStatus_OnClick" />
+
+            <Button x:Name="ClearMessageLog"
+                    Content="Clear Message Log"
+                    Margin="0, 10, 0, 0"
+                    Padding="10"
+                    Click="ClearMessageLog_OnClick" />
 
             <TextBlock x:Name="StatusTextBlock"
                        Text="Status: Ready"
@@ -40,13 +58,23 @@
         </StackPanel>
 
         <!-- right side -->
-        <StackPanel Grid.Column="1" Margin="20,0,0,0">
-            <TextBlock Text="Queued Jobs" FontWeight="Bold" Margin="0,0,0,5" />
+        <Grid Grid.Column="1" Margin="20,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Message Log"
+                       FontWeight="Bold"
+                       Margin="0,0,0,5"
+                       Grid.Row="0" />
+
             <ListBox x:Name="JobsListBox"
-                     Height="300"
+                     Grid.Row="1"
                      HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"
                      ScrollViewer.CanContentScroll="False"
                      ScrollViewer.VerticalScrollBarVisibility="Auto" />
-        </StackPanel>
+        </Grid>
     </Grid>
 </Window>
