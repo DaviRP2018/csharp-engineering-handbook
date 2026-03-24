@@ -4,19 +4,39 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="650" Width="800">
     <Grid>
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
             <TextBlock Text="Collections Performance Comparison" FontSize="18" Margin="0,0,0,20"
                        HorizontalAlignment="Center" />
-            <Button x:Name="btnOld" Content="Generate 10M Items (ArrayList - Boxed)" Width="250"
-                    Height="40" Margin="5" Click="btnOld_Click" />
-            <Button x:Name="btnNew" Content="Generate 10M Items (List&lt;int&gt; - Generic)"
-                    Width="250" Height="40" Margin="5" Click="btnNew_Click" />
-            <Button x:Name="btnClear" Content="Clear Memory" Width="250" Height="40" Margin="5"
+
+            <GroupBox Header="Memory (ArrayList vs List&lt;int&gt;)" Margin="0,0,0,20">
+                <StackPanel Margin="10">
+                    <Button x:Name="btnOld" Content="Generate 10M Items (ArrayList - Boxed)"
+                            Width="280"
+                            Height="40" Margin="5" Click="btnOld_Click" />
+                    <Button x:Name="btnNew"
+                            Content="Generate 10M Items (List&lt;int&gt; - Generic)"
+                            Width="280" Height="40" Margin="5" Click="btnNew_Click" />
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Header="Lookup Performance (HashSet vs List)" Margin="0,0,0,20">
+                <StackPanel Margin="10">
+                    <Button x:Name="btnListLookup" Content="Run List Lookup (O(n))" Width="280"
+                            Height="40" Margin="5" Click="btnListLookup_Click" />
+                    <Button x:Name="btnHashLookup" Content="Run HashSet Lookup (O(1))" Width="280"
+                            Height="40" Margin="5" Click="btnHashLookup_Click" />
+                </StackPanel>
+            </GroupBox>
+
+            <Button x:Name="btnClear" Content="Clear Memory" Width="280" Height="40" Margin="5"
                     Click="btnClear_Click" />
             <TextBlock x:Name="statusText" Text="Status: Idle" Margin="0,20,0,0"
                        HorizontalAlignment="Center" />
+
+            <ProgressBar x:Name="MainProgressBar" IsIndeterminate="True" Height="20" Width="280"
+                         Margin="0,20,0,0" Foreground="Green" />
         </StackPanel>
     </Grid>
 </Window>
