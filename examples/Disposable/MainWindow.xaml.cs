@@ -130,6 +130,7 @@ public static class ManagedMemoryHandler
 
     public static void RemoveReferences()
     {
+        Console.WriteLine("Clearing List data, so we remove refenreces to data inside it");
         Memory.Clear();
     }
 }
