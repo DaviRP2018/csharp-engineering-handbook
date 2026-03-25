@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using Timer = System.Timers.Timer;
 
 namespace Disposable;
 
@@ -27,7 +26,7 @@ public partial class MainWindow : Window
         var button = (Button)sender;
         var arg = (string)button.Tag;
         int.TryParse(arg, out var mBytes);
-        UnmanagedMemoryHandler.Leak(mBytes);
+        new UnmanagedMemoryHandler().Leak(mBytes);
         UnmanagedStatusText.Text = $"Allocated {mBytes} MB";
     }
 
@@ -69,28 +68,39 @@ public partial class MainWindow : Window
         ManagedStatusText.Text = "Removed references to that memory. GC can now collect";
     }
 
-    private void AllocateDisposable_OnClick(object sender, RoutedEventArgs e)
+    private async void AllocateDisposable_OnClick(object sender, RoutedEventArgs e)
     {
         var button = (Button)sender;
         var arg = (string)button.Tag;
         int.TryParse(arg, out var mBytes);
 
-        var item = new DisposableMemory(mBytes);
-        item.OnDisposed += (_, _) => { Dispatcher.Invoke(() => DisposableItems.Remove(item)); };
+        using (var item = new DisposableMemory())
+        {
+            item.Leak(mBytes);
+            DisposableItems.Add(item);
 
-        DisposableItems.Add(item);
+            while (item.SecondsRemaining > 0)
+            {
+                await Task.Delay(1000);
+                item.DecrementCountdown();
+            }
+        } // Scope ends, item.Dispose() is called automatically
+
+        // Find and remove the item from the list after it's disposed
+        var disposedItem = DisposableItems.FirstOrDefault(i => !i.IsActive);
+        if (disposedItem != null) DisposableItems.Remove(disposedItem);
     }
 }
 
 #region Unmanaged Memory Tab
 
-public static class UnmanagedMemoryHandler
+public class UnmanagedMemoryHandler
 {
     // We need to save the allocated pointers, otherwise if we don't know the pointer, there is
     // no way to manually free what we manually added.
     private static readonly List<IntPtr> Pointers = new();
 
-    public static void Leak(int mBytes)
+    public void Leak(int mBytes)
     {
         var bytes = mBytes * 1024 * 1024;
         var ptr = Marshal.AllocHGlobal(bytes);
@@ -158,53 +168,50 @@ public static class ManagedMemoryHandler
 
 #region IDisposable Tab
 
-public class DisposableMemory : IDisposable, INotifyPropertyChanged
+public class DisposableMemory : INotifyPropertyChanged, IDisposable
 {
-    private readonly IntPtr _ptr;
-    private readonly Timer _timer;
     private bool _disposed;
 
-    public DisposableMemory(int mBytes)
-    {
-        var bytes = mBytes * 1024 * 1024;
-        _ptr = Marshal.AllocHGlobal(bytes);
+    public IntPtr Pointer { get; private set; }
 
-        _timer = new Timer(1000);
-        _timer.Elapsed += (_, _) =>
-        {
-            if (SecondsRemaining > 0) SecondsRemaining--;
+    public int SizeMB { get; private set; }
+    public int SecondsRemaining { get; private set; } = 5;
 
-            if (SecondsRemaining <= 0) Dispose();
-        };
-        _timer.Start();
-    }
-
-    private int SecondsRemaining
-    {
-        get;
-        set
-        {
-            field = value;
-            OnPropertyChanged();
-        }
-    } = 5;
+    public bool IsActive => !_disposed;
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
 
-        _timer.Stop();
-        _timer.Dispose();
-        Marshal.FreeHGlobal(_ptr);
-        OnDisposed?.Invoke(this, EventArgs.Empty);
+        if (Pointer != IntPtr.Zero)
+        {
+            Marshal.FreeHGlobal(Pointer);
+            Console.WriteLine($"Memory at {Pointer} freed by Dispose().");
+            Pointer = IntPtr.Zero;
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public event EventHandler? OnDisposed;
+    public void Leak(int mBytes)
+    {
+        SizeMB = mBytes;
+        var bytes = mBytes * 1024 * 1024;
+        Pointer = Marshal.AllocHGlobal(bytes);
+        Console.WriteLine($"Allocated {mBytes} MB at {Pointer} in DisposableMemory scope.");
+    }
 
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    public void DecrementCountdown()
+    {
+        if (SecondsRemaining > 0)
+        {
+            SecondsRemaining--;
+            OnPropertyChanged(nameof(SecondsRemaining));
+        }
+    }
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
