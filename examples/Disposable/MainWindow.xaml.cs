@@ -1,6 +1,10 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using Timer = System.Timers.Timer;
 
 namespace Disposable;
 
@@ -12,7 +16,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        DataContext = this;
     }
+
+    public ObservableCollection<DisposableMemory> DisposableItems { get; } = new();
 
 
     private void AllocateUnmanagedMemory_OnClick(object sender, RoutedEventArgs e)
@@ -60,6 +67,18 @@ public partial class MainWindow : Window
     {
         ManagedMemoryHandler.RemoveReferences();
         ManagedStatusText.Text = "Removed references to that memory. GC can now collect";
+    }
+
+    private void AllocateDisposable_OnClick(object sender, RoutedEventArgs e)
+    {
+        var button = (Button)sender;
+        var arg = (string)button.Tag;
+        int.TryParse(arg, out var mBytes);
+
+        var item = new DisposableMemory(mBytes);
+        item.OnDisposed += (_, _) => { Dispatcher.Invoke(() => DisposableItems.Remove(item)); };
+
+        DisposableItems.Add(item);
     }
 }
 
@@ -132,6 +151,62 @@ public static class ManagedMemoryHandler
     {
         Console.WriteLine("Clearing List data, so we remove refenreces to data inside it");
         Memory.Clear();
+    }
+}
+
+#endregion
+
+#region IDisposable Tab
+
+public class DisposableMemory : IDisposable, INotifyPropertyChanged
+{
+    private readonly IntPtr _ptr;
+    private readonly Timer _timer;
+    private bool _disposed;
+
+    public DisposableMemory(int mBytes)
+    {
+        var bytes = mBytes * 1024 * 1024;
+        _ptr = Marshal.AllocHGlobal(bytes);
+
+        _timer = new Timer(1000);
+        _timer.Elapsed += (_, _) =>
+        {
+            if (SecondsRemaining > 0) SecondsRemaining--;
+
+            if (SecondsRemaining <= 0) Dispose();
+        };
+        _timer.Start();
+    }
+
+    private int SecondsRemaining
+    {
+        get;
+        set
+        {
+            field = value;
+            OnPropertyChanged();
+        }
+    } = 5;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _timer.Stop();
+        _timer.Dispose();
+        Marshal.FreeHGlobal(_ptr);
+        OnDisposed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public event EventHandler? OnDisposed;
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
 
