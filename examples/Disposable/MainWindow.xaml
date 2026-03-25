@@ -4,6 +4,100 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid />
+        Title="MainWindow" Height="750" Width="800">
+    <Grid>
+        <TabControl Margin="10">
+            <TabItem Header="Unmanaged Memory">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Memory Demonstration" FontSize="18"
+                               Margin="0, 0, 0, 10"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Check your IDE's memory monitor"
+                               Margin="0, 0, 0, 20"
+                               HorizontalAlignment="Center" />
+
+                    <GroupBox Header="Memory Allocation" Margin="0, 0, 0, 20">
+                        <StackPanel Margin="10">
+                            <Button
+                                Content="Allocate 5MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateUnmanagedMemory_OnClick" Tag="5" />
+                            <Button
+                                Content="Allocate 25MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateUnmanagedMemory_OnClick" Tag="25" />
+                            <Button
+                                Content="Allocate 50MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateUnmanagedMemory_OnClick" Tag="50" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <Button Content="Clear Memory" Width="280" Height="40"
+                            Margin="5"
+                            Click="ClearUnmanagedMemory_OnClick"
+                            Background="DarkGreen"
+                            Foreground="White" />
+                    <TextBlock x:Name="UnmanagedStatusText" Text="Status: Idle"
+                               Margin="0, 20, 0, 0"
+                               HorizontalAlignment="Center" Foreground="Green" />
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="Managed Memory">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="Memory Demonstration" FontSize="18"
+                               Margin="0, 0, 0, 10"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Check your IDE's memory monitor"
+                               Margin="0, 0, 0, 20"
+                               HorizontalAlignment="Center" />
+
+                    <GroupBox Header="Managed Allocation" Margin="0, 0, 0, 20">
+                        <StackPanel Margin="10">
+                            <Button
+                                Content="Allocate 25MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateManagedMemory_OnClick" Tag="25" />
+                            <Button
+                                Content="Allocate 50MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateManagedMemory_OnClick" Tag="50" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Allocation With Reference" Margin="0, 0, 0, 20">
+                        <StackPanel Margin="10">
+                            <Button
+                                Content="Allocate 25MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateReferencedMemory_OnClick" Tag="25" />
+                            <Button
+                                Content="Allocate 50MB"
+                                Width="280"
+                                Height="40" Margin="5"
+                                Click="AllocateReferencedMemory_OnClick" Tag="50" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <Button Content="Clear Memory" Width="280" Height="40"
+                            Margin="5"
+                            Click="ClearManagedMemory_OnClick"
+                            Background="DarkGreen"
+                            Foreground="White" />
+                    <Button Content="Remove References" Width="280" Height="40"
+                            Margin="5"
+                            Click="RemoveReferences_OnClick" />
+                    <TextBlock x:Name="ManagedStatusText" Text="Status: Idle" Margin="0, 20, 0, 0"
+                               HorizontalAlignment="Center" Foreground="Green" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
 </Window>
