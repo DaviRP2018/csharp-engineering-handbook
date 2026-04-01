@@ -1,0 +1,84 @@
+﻿<Window x:Class="FlaggedEnum.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Row 0: Permission Switches (Spans across both columns) -->
+        <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                BorderBrush="LightGray" BorderThickness="1" Padding="15" Margin="0,0,0,15">
+            <StackPanel>
+                <TextBlock Text="Set User Permissions to Check" FontSize="18" FontWeight="Bold"
+                           Margin="0,0,0,10" />
+                <WrapPanel HorizontalAlignment="Center">
+                    <CheckBox x:Name="ChkRead" Content="Read" Margin="10,5" IsChecked="True" />
+                    <CheckBox x:Name="ChkWrite" Content="Write" Margin="10,5" />
+                    <CheckBox x:Name="ChkExecute" Content="Execute" Margin="10,5" />
+                    <CheckBox x:Name="ChkAdmin" Content="Admin" Margin="10,5" />
+                    <CheckBox x:Name="ChkDelete" Content="Delete" Margin="10,5" />
+                    <CheckBox x:Name="ChkShare" Content="Share" Margin="10,5" />
+                </WrapPanel>
+                <Button Content="Run Performance Test (10M Users)" Click="BtnRunTest_OnClick"
+                        Height="40" Margin="0,15,0,0" Width="300" FontWeight="Bold"
+                        Background="LightBlue" />
+            </StackPanel>
+        </Border>
+
+        <!-- Row 1, Column 0: Traditional If -->
+        <Border Grid.Row="1" Grid.Column="0" BorderBrush="LightGray" BorderThickness="1"
+                Margin="0,0,5,0" Padding="15">
+            <StackPanel>
+                <TextBlock Text="Traditional If Logic" FontSize="16" FontWeight="Bold"
+                           Foreground="DarkRed" Margin="0,0,0,10" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" FontSize="13">
+                    Checks each permission using multiple Boolean properties and AND/OR conditions.
+                </TextBlock>
+                <Border Background="#FFF0F0" Padding="10" CornerRadius="5">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtTraditionalTime" Text="Time: 0ms" FontSize="20"
+                                   FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TxtTraditionalResult" Text="Results Processed: 0"
+                                   FontSize="12" Margin="0,5,0,0" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Margin="0,15,0,0" FontSize="11" FontStyle="Italic" TextWrapping="Wrap">
+                    if (user.CanRead &amp;&amp; user.CanWrite &amp;&amp; ...)
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Row 1, Column 1: Flagged Enum -->
+        <Border Grid.Row="1" Grid.Column="1" BorderBrush="LightGray" BorderThickness="1"
+                Margin="5,0,0,0" Padding="15">
+            <StackPanel>
+                <TextBlock Text="Flagged Enum Logic" FontSize="16" FontWeight="Bold"
+                           Foreground="DarkGreen" Margin="0,0,0,10" />
+                <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" FontSize="13">
+                    Checks all permissions at once using a single bitwise &amp; operation.
+                </TextBlock>
+                <Border Background="#F0FFF0" Padding="10" CornerRadius="5">
+                    <StackPanel>
+                        <TextBlock x:Name="TxtFlaggedTime" Text="Time: 0ms" FontSize="20"
+                                   FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="TxtFlaggedResult" Text="Results Processed: 0"
+                                   FontSize="12" Margin="0,5,0,0" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Margin="0,15,0,0" FontSize="11" FontStyle="Italic" TextWrapping="Wrap">
+                    if ((user.Permissions &amp; required) == required)
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
