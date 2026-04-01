@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Disposable", "examples\Disp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigureAwaitDeadlock", "examples\ConfigureAwaitDeadlock\ConfigureAwaitDeadlock.csproj", "{C3DEC463-E691-49B1-90F6-C7AD16C7A745}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpanMemory", "examples\SpanMemory\SpanMemory.csproj", "{3FA4463A-42C0-4503-BA59-418A139820B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,7 @@ Global
 		{0F9EDDDF-7CB5-4E17-8A07-EF695AAA6FB0} = {4C397C37-DDE7-4F7B-B30E-D4819974CB68}
 		{C1062A74-1D05-47FE-9666-D1BB3888BBA8} = {4C397C37-DDE7-4F7B-B30E-D4819974CB68}
 		{C3DEC463-E691-49B1-90F6-C7AD16C7A745} = {4C397C37-DDE7-4F7B-B30E-D4819974CB68}
+		{3FA4463A-42C0-4503-BA59-418A139820B1} = {4C397C37-DDE7-4F7B-B30E-D4819974CB68}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{6760A095-97CD-450B-BF7E-0EAF66853FFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -63,5 +66,9 @@ Global
 		{C3DEC463-E691-49B1-90F6-C7AD16C7A745}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3DEC463-E691-49B1-90F6-C7AD16C7A745}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3DEC463-E691-49B1-90F6-C7AD16C7A745}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FA4463A-42C0-4503-BA59-418A139820B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FA4463A-42C0-4503-BA59-418A139820B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FA4463A-42C0-4503-BA59-418A139820B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FA4463A-42C0-4503-BA59-418A139820B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

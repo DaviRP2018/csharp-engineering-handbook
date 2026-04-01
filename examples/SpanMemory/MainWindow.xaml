@@ -1,0 +1,39 @@
+﻿<Window x:Class="SpanMemory.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Span vs. Memory Copy Demonstration" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+            <TextBlock Text="Memory Example" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,20">
+                This example demonstrates how <Span FontWeight="Bold">Span&lt;T&gt;</Span>
+                provides a window into existing memory without allocating new memory, unlike traditional array copies.
+            </TextBlock>
+
+            <Button x:Name="BtnTraditionalCopy" Content="Run Traditional Copy"
+                    Click="BtnTraditionalCopy_OnClick" Height="40" Margin="0,0,0,10" />
+            <Button x:Name="BtnSpanSlice" Content="Run Span Slicing (Zero Copy)"
+                    Click="BtnSpanSlice_OnClick" Height="40" Margin="0,0,0,10" />
+
+            <Separator Margin="0,10" />
+
+            <Button x:Name="BtnClearLog" Content="Clear Log" Click="BtnClearLog_OnClick"
+                    Height="30" Width="100" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <GroupBox Grid.Column="1" Header="Log History">
+            <ScrollViewer x:Name="LogScrollViewer">
+                <TextBlock x:Name="LogDisplay" TextWrapping="Wrap" FontFamily="Consolas"
+                           Margin="5" />
+            </ScrollViewer>
+        </GroupBox>
+    </Grid>
+</Window>
