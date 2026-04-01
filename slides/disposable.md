@@ -10,7 +10,7 @@ Properly managing these resources is critical to building stable, high-performan
 Failing to do so can lead to resource leaks, where the system runs out of available handles or
 connections even if there is plenty of RAM available.
 
-### The Problem: Managed vs. Unmanaged Resources
+## The Problem: Managed vs. Unmanaged Resources
 
 To understand why we need `IDisposable`, we must distinguish between two types of resources:
 
@@ -30,7 +30,9 @@ cleanup is non-deterministic, meaning you don't know exactly when it will happen
 connection, waiting several minutes for the GC to run could mean hitting the connection pool limit
 and crashing the app.
 
-### IDisposable: A Contract for Deterministic Cleanup
+Let's check the app to see the difference between managed and unmanaged memory
+
+## IDisposable: A Contract for Deterministic Cleanup
 
 The `IDisposable` interface is the standard way in .NET to provide **deterministic cleanup**. It
 contains a single method:
@@ -48,12 +50,19 @@ important that needs to be released as soon as you are done with me."*
 When you call `Dispose()`, you are manually triggering the cleanup of these resources rather than
 waiting for the Garbage Collector.
 
-### The 'using' Statement and Declaration
+### What Does It Mean Deterministic and Nondeterministic?
+
+Think of it like this:
+
+- Deterministic → "I know exactly what will happen and when"
+- Nondeterministic → "I know what can happen, but not exactly when or in what order"
+
+## The 'using' Statement and Declaration
 
 To ensure `Dispose()` is called even if an exception occurs, C# provides the `using` statement.
 This is the most common and safest way to work with disposable objects.
 
-#### The 'using' Statement (Classic)
+### The 'using' Statement (Classic)
 
 The classic statement defines a scope. When the closing brace is reached, `Dispose()` is
 automatically called.
@@ -65,7 +74,7 @@ using (var stream = new FileStream("data.txt", FileMode.Open))
 } // Dispose() is called here automatically
 ```
 
-#### The 'using' Declaration (C# 8.0+)
+### The 'using' Declaration (C# 8.0+)
 
 A more concise syntax where the object is disposed of at the end of the current scope (usually the
 end of the method).
@@ -79,62 +88,363 @@ void ProcessFile()
 } // Dispose() is called here when the method returns
 ```
 
-**Analogy: The Library Book**
-Think of a managed object like a book you bought; you can throw it in a corner when done, and
-eventually, your "cleaner" (the GC) will pick it up. A disposable object is like a
-**library book**. You have a responsibility to return it (Dispose) so others can use it.
-If you keep too many library books without returning them, the library (the OS) will eventually
-refuse to lend you any more.
+**Analogy: The restaurant**
+A customer in a restaurant is eating a dish and then leaves the table to go to the
+bathroom, leaving his partially eaten food on the table.
+The waiter won't (or at least shouldn't right?) clear and clean the customer's table because he
+knows that food still "has a reference," the customer in the bathroom.
+Until that customer is inside the restaurant, that food has a reference, let's say. But when the
+customer is done, pays the bill, and leaves the restaurant, that food is free to be "garbage
+collected."
 
-### The Standard Dispose Pattern
+Let's check the WPF form to see the benefit of using IDisposable interface.
 
-When creating a class that implements `IDisposable`, especially if it's meant to be inherited, we
-follow the **Standard Dispose Pattern**. This ensures that:
+## How To Properly Implement The IDisposable Interface – The Standard Dispose Pattern
 
-1. Resources are disposed of only once.
-2. If a developer forgets to call `Dispose()`, the **Finalizer** (Destructor) can act as a
-   fallback.
+- https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose
 
-```csharp
-public class ResourceWrapper : IDisposable
+All non-sealed classes should be considered a **potential base class**, because they could be
+inherited. If you implement the dispose pattern for any potential base class, you must add the
+following methods to your class:
+
+- A Dispose implementation that calls the `Dispose(bool)` method.
+- A `Dispose(bool)` method that performs the actual cleanup.
+- If your class deals with unmanaged resources, either provide an override to the Object.Finalize
+  method or wrap the unmanaged resource in a SafeHandle.
+
+### When Your Class is Sealed
+
+Should at least implement `Dispose()` method:
+
+````csharp
+using System;
+
+public sealed class SealedResourceWrapper : IDisposable
 {
+    // Flag to track whether Dispose has already been called
+    // Still needed for idempotency (safe multiple calls)
     private bool _disposed = false;
-
-    // The public Dispose method
+    
+    // The public Dispose method - this is what consumers call
     public void Dispose()
     {
-        Dispose(true);
+        // Guard clause: if already disposed, do nothing
+        // Makes Dispose() idempotent (safe to call multiple times)
+        if (_disposed) return;
+
+        // Clean up MANAGED resources (other IDisposable objects)
+        // Since this is deterministic cleanup, it's safe to access all managed objects
+        // Example:
+        // _fileStream?.Dispose();
+        // _databaseConnection?.Dispose();
+
+        // Clean up UNMANAGED resources (IntPtr handles, etc.)
+        // Example:
+        // if (_unmanagedHandle != IntPtr.Zero) {
+        //     CloseHandle(_unmanagedHandle);
+        //     _unmanagedHandle = IntPtr.Zero;
+        // }
+
+        // Mark as disposed to prevent future operations
+        _disposed = true;
+
         // Tell the GC not to call the finalizer since we've already cleaned up
+        // This is a performance optimization
+        GC.SuppressFinalize(this);
+    }
+}
+````
+
+Real world example:
+
+````csharp
+public sealed class SimpleSealedWrapper : IDisposable
+{
+    private readonly FileStream _fileStream;
+    private readonly HttpClient _httpClient;
+    private bool _disposed = false;
+
+    public SimpleSealedWrapper()
+    {
+        _fileStream = new FileStream("data.txt", FileMode.OpenOrCreate);
+        _httpClient = new HttpClient();
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+
+        // Clean up managed disposable resources
+        _fileStream?.Dispose();
+        _httpClient?.Dispose();
+
+        _disposed = true;
+        
+        // Still call GC.SuppressFinalize even without a finalizer
+        // This is harmless and maintains consistency
+        GC.SuppressFinalize(this);
+    }
+
+    // No finalizer needed since we only have managed resources
+    // The GC will eventually clean up the managed objects
+}
+````
+
+### When the class is Non-Sealed
+
+Any non-sealed class should have an `Dispose(bool)` overload method because the class could
+potentially be inherited.
+
+In the overload, the `disposing` parameter is a `Boolean` that indicates whether the method call
+comes from a `Dispose` method (its value is `true`) or from a finalizer (its value is `false`).
+
+````csharp
+public class NonSealedResourceWrapper : IDisposable
+{
+    // Flag to track whether Dispose has already been called
+    // This prevents duplicate cleanup and allows idempotent Dispose calls
+    private bool _disposed = false;
+
+    // The public Dispose method - this is what consumers call
+    // This method implements the deterministic cleanup contract of IDisposable
+    public void Dispose()
+    {
+        // Call the protected Dispose method with true to indicate
+        // this is a deliberate cleanup (not from finalizer)
+        Dispose(true);
+        
+        // Tell the GC not to call the finalizer since we've already cleaned up
+        // This is a performance optimization - avoids unnecessary finalization queue processing
+        // and prevents the object from living longer than needed (finalizable objects survive
+        // an extra GC cycle)
         GC.SuppressFinalize(this);
     }
 
     // The protected virtual method for subclasses to override
+    // This is the core of the dispose pattern - it handles both deterministic
+    // and non-deterministic cleanup scenarios
     protected virtual void Dispose(bool disposing)
     {
+        // Guard clause: if already disposed, do nothing
+        // This makes Dispose() idempotent (safe to call multiple times)
         if (_disposed) return;
 
+        // The 'disposing' parameter tells us HOW we got here:
+        // - true: Called from Dispose() method (deterministic cleanup)
+        // - false: Called from finalizer (non-deterministic cleanup)
         if (disposing)
         {
             // Clean up MANAGED resources (other IDisposable objects)
+            // We only do this when disposing=true because:
+            // 1. During finalization, other managed objects may already be finalized
+            // 2. The GC will handle managed memory anyway
+            // 3. Accessing managed objects from finalizer thread can be dangerous
+            
+            // Example: if we had fields like:
+            // _fileStream?.Dispose();
+            // _databaseConnection?.Dispose();
         }
 
-        // Clean up UNMANAGED resources (IntPtr handles, etc.)
+        // Clean up UNMANAGED resources (IntPtr handles, Win32 handles, etc.)
+        // This happens regardless of how we got here because:
+        // 1. Unmanaged resources won't be cleaned up automatically
+        // 2. We must release them whether called from Dispose() or finalizer
+        // 3. This is our last chance to prevent resource leaks
+        
+        // Example: if we had unmanaged resources:
+        // if (_unmanagedHandle != IntPtr.Zero) {
+        //     CloseHandle(_unmanagedHandle);
+        //     _unmanagedHandle = IntPtr.Zero;
+        // }
 
+        // Mark as disposed to prevent future operations and duplicate cleanup
         _disposed = true;
     }
 
-    // Finalizer (Destructor) - Only needed if you have raw unmanaged resources
-    ~ResourceWrapper()
+    // Finalizer (Destructor) - Only needed if you have direct unmanaged resources
+    // This provides a safety net for non-deterministic cleanup when consumers
+    // forget to call Dispose() explicitly
+    ~NonSealedResourceWrapper()
     {
+        // Call Dispose with false to indicate this is finalization, not explicit disposal
+        // This means:
+        // - Don't touch managed resources (they may already be finalized)
+        // - Only clean up unmanaged resources
+        // - This is our last chance to prevent resource leaks
         Dispose(false);
     }
 }
-```
+````
 
-### IAsyncDisposable: Handling Asynchronous Cleanup
+Here's How a Derived Class Would Extend It:
 
-Modern .NET introduced `IAsyncDisposable` to handle scenarios where closing a resource requires an
-asynchronous operation (e.g., flushing a buffer to a remote server or closing a network stream).
+````csharp
+public class DerivedResourceWrapper : NonSealedResourceWrapper
+{
+    private FileStream _additionalResource;
+    private bool _derivedDisposed = false;
+
+    // The derived class overrides the protected virtual method
+    protected override void Dispose(bool disposing)
+    {
+        // Guard clause for this level
+        if (_derivedDisposed) return;
+
+        if (disposing)
+        {
+            // Clean up managed resources specific to derived class
+            _additionalResource?.Dispose();
+        }
+
+        // Clean up unmanaged resources specific to derived class
+        // (if any)
+
+        _derivedDisposed = true;
+
+        // CRITICAL: Call base class disposal
+        // This ensures the entire inheritance chain gets cleaned up
+        base.Dispose(disposing);
+    }
+}
+````
+
+> **Important!**
+>
+> A finalizer (a `Object.Finalize` override) is only required if you directly reference unmanaged
+> resources. **This is a highly advanced scenario that can be typically avoided**:
+> - If your class references only managed objects, it's still possible for the class to implement
+    the dispose pattern. There's no need to implement a finalizer.
+> - If you need to deal with unmanaged resources, we strongly recommend wrapping the unmanaged
+    `IntPtr` handle into a `SafeHandle`. The `SafeHandle` provides a finalizer so you don't have to
+    write one yourself.
+>
+> Again, it's recommended to avoid implementing a finalizer.
+
+### What's a Finalizer?
+
+In C#, a finalizer looks like a destructor, but it's different from in C++.
+You declare it like this, using the tilt (~) symbol.
+
+````csharp
+class MyClass
+{
+    ~MyClass()
+    {
+        // cleanup code
+    }
+}
+````
+
+When should you use a finalizer?
+Almost never directly.
+
+Observation:
+
+- You cannot call it manually
+- You cannot control when it runs
+- It is executed by the GC on a separate thread
+
+A finalizer is part of nondeterministic cleanup:
+
+- it runs at an unknown time
+- it may run much later
+- it might not run at all before process exit
+
+### Cascade dispose calls
+
+If your class owns an instance of another type that implements `IDisposable`, the containing class
+itself should also implement `IDisposable`. Typically a class that instantiates an `IDisposable`
+implementation and stores it as an instance member (or property) is also **responsible for its
+cleanup**. This helps ensure that the referenced disposable types are given the opportunity to
+deterministically perform cleanup through the `Dispose` method. In the following example, the class
+is sealed.
+
+````csharp
+using System;
+
+public sealed class Foo : IDisposable
+{
+    private readonly IDisposable _bar;
+
+    public Foo()
+    {
+        _bar = new Bar();
+    }
+
+    public void Dispose() => _bar.Dispose();
+}
+````
+
+If your class has an `IDisposable` field or property but doesn't _own_ it, then the class doesn't
+need to implement `IDisposable`. Typically a class creating and storing the `IDisposable` child
+object also becomes the owner, but in some cases the ownership can be transferred to another
+`IDisposable` type.
+
+#### Ownership is not a language feature, it's a design responsibility.
+
+- If your class owns an object → it must dispose it
+- If it does not own it → it must NOT dispose it
+
+How to identify ownership
+Think in terms of who created it and who controls its lifetime.
+
+If your class instantiates the dependency, it owns it.
+
+**Case 1: You create it → You own it**
+
+````csharp
+class MyService : IDisposable
+{
+    private readonly StreamReader _reader = new StreamReader("file.txt");
+
+    public void Dispose()
+    {
+        _reader.Dispose(); // you own it → you dispose it
+    }
+}
+````
+
+**Case 2: It is injected → You probably don't own it**
+
+Here, the object comes from outside.
+
+- You didn't create it
+- Someone else might be using it → You don't own it
+
+````csharp
+class MyService
+{
+    private readonly StreamReader _reader;
+
+    public MyService(StreamReader reader)
+    {
+        _reader = reader;
+    }
+}
+````
+
+## IAsyncDisposable: Handling Asynchronous Cleanup
+
+The `System.IAsyncDisposable` interface was introduced as part of C# 8.0. You implement the
+`IAsyncDisposable.DisposeAsync()` method when you need to perform resource cleanup, just as you
+would when implementing a Dispose method. One of the key differences, however, is that this
+implementation allows for asynchronous cleanup operations. The `DisposeAsync()` returns a
+`ValueTask` that represents the asynchronous disposal operation (e.g., flushing a buffer to a
+remote server or closing a network stream).
+
+It's typical when implementing the `IAsyncDisposable` interface that classes **also implement the
+`IDisposable` interface**. A good implementation pattern of the `IAsyncDisposable` interface is to
+be prepared for either synchronous or asynchronous disposal, **however, it's not a requirement**.
+If no synchronous disposable of your class is possible, having only `IAsyncDisposable` is
+acceptable. All the guidance for implementing the disposal pattern also applies to the
+asynchronous implementation.
+
+> **Note:**
+>
+> If you implement the `IAsyncDisposable` interface but not the `IDisposable` interface,
+> your app can potentially leak resources. If a class implements `IAsyncDisposable`, but not
+`IDisposable`, and a consumer only calls `Dispose`, your implementation would never call
+`DisposeAsync`. This would result in a resource leak.
 
 ```csharp
 public interface IAsyncDisposable
@@ -149,13 +459,13 @@ If a class implements `IAsyncDisposable`, you should use `await using`:
 await using (var service = new AsyncService())
 {
     await service.DoWorkAsync();
-} // DisposeAsync() is awaited here
+}  // DisposeAsync() is awaited here
 ```
 
 This prevents the calling thread from blocking while waiting for the resource to shut down,
 maintaining the benefits of asynchronous programming throughout the entire lifecycle of the object.
 
-### Best Practices and Common Pitfalls
+## Best Practices and Common Pitfalls
 
 1. **Dispose is NOT for memory management**: Do not implement `IDisposable` just to null out large
    lists or strings. Let the GC do its job for managed memory.
