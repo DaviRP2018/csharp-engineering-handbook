@@ -446,24 +446,495 @@ asynchronous implementation.
 `IDisposable`, and a consumer only calls `Dispose`, your implementation would never call
 `DisposeAsync`. This would result in a resource leak.
 
-```csharp
-public interface IAsyncDisposable
+The IAsyncDisposable interface declares:
+
+- A `public IAsyncDisposable.DisposeAsync()` implementation that has no parameters.
+- Any nonsealed class should define a `protected virtual ValueTask DisposeAsyncCore()` method whose
+  signature is:
+
+````csharp
+protected virtual ValueTask DisposeAsyncCore()
 {
-    ValueTask DisposeAsync();
 }
-```
+````
 
-If a class implements `IAsyncDisposable`, you should use `await using`:
+> **What is a ValueTask?**
+>
+> A `ValueTask` is a structure that can wrap either a `Task` or a `IValueTaskSource` instance.
+> The following operations should never be performed on a `ValueTask` instance:
+>
+> - Awaiting the instance multiple times.
+> - Calling `AsTask` multiple times.
+> - Using more than one of these techniques to consume the instance.
+>
+> For more information,
+> see: https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.valuetask?view=net-10.0
 
-```csharp
-await using (var service = new AsyncService())
+## How To Properly Implement The IAsyncDisposable Interface – The Standard Dispose Pattern
+
+- https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-disposeasync
+
+Here are the examples:
+
+### 1. When Your Class is Sealed and Fully Async
+
+Can implement only `DisposeAsync`. `DisposeAsyncCore` is desirable but not needed.
+
+````csharp
+public sealed class MyServiceAsync : IAsyncDisposable
 {
-    await service.DoWorkAsync();
-}  // DisposeAsync() is awaited here
-```
+    private bool _disposed = false;
+    private IAsyncDisposable? _asyncResource = new MyAsyncResource();
 
-This prevents the calling thread from blocking while waiting for the resource to shut down,
-maintaining the benefits of asynchronous programming throughout the entire lifecycle of the object.
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+
+        if (_asyncResource is not null)
+        {
+            await _asyncResource.DisposeAsync().ConfigureAwait(false);
+        }
+
+        _asyncResource = null;
+        _disposed = true;
+        
+        GC.SuppressFinalize(this);
+    }
+}
+````
+
+### 2. When Your Class is Non-Sealed and Fully Async
+
+Needs to implement at least both `DisposeAsync` and `DisposeAsyncCore`
+
+The `DisposeAsyncCore()` method is intended to perform the asynchronous cleanup of managed
+resources or for cascading calls to `DisposeAsync()`. It encapsulates the common asynchronous
+cleanup operations when a subclass inherits a base class that is an implementation of
+`IAsyncDisposable.` The `DisposeAsyncCore()` method is virtual so that derived classes can define
+custom cleanup in their overrides.
+
+````csharp
+public class MyServiceAsync : IAsyncDisposable
+{
+    private bool _disposed = false;
+    private IAsyncDisposable? _asyncResource = new MyAsyncResource();
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+        
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (_disposed) return;
+
+        if (_asyncResource is not null)
+        {
+            await _asyncResource.DisposeAsync().ConfigureAwait(false);
+        }
+
+        _asyncResource = null;
+        _disposed = true;
+    }
+}
+````
+
+### 3. When Your Class is Sealed and Needs Synchronous Disposal
+
+Can implement both `Dispose` and `DisposeAsync` only.
+
+````csharp
+public sealed class MyServiceAsync : IDisposable, IAsyncDisposable
+{
+    private bool _disposed = false;
+    private bool _asyncDisposed = false;
+    IDisposable? _disposableResource = new MemoryStream();
+    IAsyncDisposable? _asyncDisposableResource = new MemoryStream();
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        
+        _disposableResource?.Dispose();
+        _disposableResource = null;
+
+        if (_asyncDisposableResource is IDisposable disposable)
+        {
+            disposable.Dispose();
+            _asyncDisposableResource = null;
+        }
+        
+        _disposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_asyncDisposed) return;
+        
+        if (_asyncDisposableResource is not null)
+        {
+            await _asyncDisposableResource.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (_disposableResource is IAsyncDisposable disposable)
+        {
+            await disposable.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            _disposableResource?.Dispose();
+        }
+
+        _asyncDisposableResource = null;
+        _disposableResource = null;
+        
+        _asyncDisposed = true;
+        GC.SuppressFinalize(this);
+    }
+}
+````
+
+### 4. When Your Class is Non-Sealed and Needs Synchronous Disposal
+
+Needs full implementation: `Dispose`, `Dispose(bool)`, `DisposeAsync` and `DisposeAsyncCore`.
+
+- The `ExampleAsyncDisposable` is a nonsealed class that implements the `IAsyncDisposable`
+  interface.
+- It contains a private `IAsyncDisposable` field, `_example`, that's initialized in the
+  constructor.
+- The `DisposeAsync` method delegates to the `DisposeAsyncCore` method and calls
+  `GC.SuppressFinalize` to notify the garbage collector that the finalizer doesn't have to run.
+- It contains a `DisposeAsyncCore()` method that calls the `_example.DisposeAsync()` method, and
+  sets the field to null.
+- The `DisposeAsyncCore()` method is `virtual`, which allows subclasses to override it with custom
+  behavior.
+
+````csharp
+class MyServiceAsync : IDisposable, IAsyncDisposable
+{
+    private bool _disposed = false;
+    private bool _asyncDisposed = false;
+    IDisposable? _disposableResource = new MemoryStream();
+    IAsyncDisposable? _asyncDisposableResource = new MemoryStream();
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+
+        Dispose(disposing: false);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        
+        if (disposing)
+        {
+            _disposableResource?.Dispose();
+            _disposableResource = null;
+
+            if (_asyncDisposableResource is IDisposable disposable)
+            {
+                disposable.Dispose();
+                _asyncDisposableResource = null;
+            }
+        }
+        
+        _disposed = true;
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (_asyncDisposed) return;
+        
+        if (_asyncDisposableResource is not null)
+        {
+            await _asyncDisposableResource.DisposeAsync().ConfigureAwait(false);
+        }
+
+        if (_disposableResource is IAsyncDisposable disposable)
+        {
+            await disposable.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            _disposableResource?.Dispose();
+        }
+
+        _asyncDisposableResource = null;
+        _disposableResource = null;
+        _asyncDisposed = true;
+    }
+}
+````
+
+> **Note**
+>
+> One primary difference in the async dispose pattern compared to the dispose pattern, is that the
+> call from `DisposeAsync()` to the `Dispose(bool)` overload method is given `false` as an
+> argument. When implementing the `IDisposable.Dispose()` method, however, `true` is passed
+> instead. This helps ensure functional equivalence with the synchronous dispose pattern, and
+> further ensures that finalizer code paths still get invoked. In other words, the
+`DisposeAsyncCore()` method will dispose of managed resources asynchronously, so you don't want to
+> dispose of them synchronously as well. Therefore, call `Dispose(false)` instead of
+`Dispose(true)`.
+
+> **Note:** `static` classes are `sealed`
+
+## What About a Finalizer in Async Pattern?
+
+There is NO finalizer in async programming. A finalizer will always be synchronous and should be
+avoided.
+
+- There is NO async finalizer
+- Finalizer ≠ async cleanup
+- Finalizer = last resource for unmanaged
+
+## Using async disposable
+
+To properly consume an object that implements the `IAsyncDisposable` interface, you use the `await`
+and `using` keywords together. Consider the following example, where the `ExampleAsyncDisposable`
+class is instantiated and then wrapped in an `await using` statement.
+
+````csharp
+class ExampleUsingStatementProgram
+{
+    static async Task Main()
+    {
+        await using (var exampleAsyncDisposable = new ExampleAsyncDisposable())
+        {
+            // Interact with the exampleAsyncDisposable instance.
+        }
+
+        Console.ReadLine();
+    }
+}
+````
+
+For situations where the usage of `ConfigureAwait` is needed, the `await using` statement could be
+as follows:
+
+````csharp
+class ExampleConfigureAwaitProgram
+{
+    static async Task Main()
+    {
+        var exampleAsyncDisposable = new ExampleAsyncDisposable();
+        await using (exampleAsyncDisposable.ConfigureAwait(false))
+        {
+            // Interact with the exampleAsyncDisposable instance.
+        }
+
+        Console.ReadLine();
+    }
+}
+````
+
+### ConfigureAwait Extension Method
+
+Use the `ConfigureAwait(IAsyncDisposable, Boolean)` extension method of the `IAsyncDisposable`
+interface to configure how the continuation of the task is marshaled on its original context or
+scheduler.
+
+````csharp
+class ExampleConfigureAwaitProgram
+{
+    static async Task Main()
+    {
+        var exampleAsyncDisposable = new ExampleAsyncDisposable();
+        await using (exampleAsyncDisposable.ConfigureAwait(false))
+        {
+            // Interact with the exampleAsyncDisposable instance.
+        }
+
+        Console.ReadLine();
+    }
+}
+````
+
+#### What is ConfigureAwait(bool)?
+
+- https://devblogs.microsoft.com/dotnet/configureawait-faq/
+
+When you do:
+
+````csharp
+await SomeAsync();
+````
+
+By default, it's doing this:
+
+````csharp
+await SomeAsync().ConfigureAwait(true);
+````
+
+When it's `true` you are telling to capture the actual context.
+
+**Behavior**
+
+| Option                  | Description                                                              |
+|-------------------------|--------------------------------------------------------------------------|
+| `ConfigureAwait(true)`  | Captures the current context and resumes on it after the await           |
+| `ConfigureAwait(false)` | Does not capture the context; continuation may run on a different thread |
+
+**Why would I want to use ConfigureAwait(false)?**
+
+`ConfigureAwait(continueOnCapturedContext: false)` is used to avoid forcing the callback to be
+invoked on the original context or scheduler. This has a few benefits:
+
+- Improving performance: If the code after an `await` doesn’t actualy require running in the
+  original context, using `ConfigureAwait(false)` can avoid all these costs: it won’t need to queue
+  unnecessarily, it can use all the optimizations it can muster, and it can avoid the
+  unnecessary thread static accesses.
+- Avoiding deadlocks: Can cause deadlocks in specific scenarios. Let's see this in the following
+  example.
+
+Imagine a WPF form with the following code:
+
+````csharp
+1.  public static void Main()
+2.  {
+3.      // Simulating a UI thread blocking
+4.      var result = GetDataAsync().Result; // Blocks the thread
+5.      Console.WriteLine(result);
+6.  }
+7.  
+8.  public static async Task<string> GetDataAsync()
+9.  {
+10.     await Task.Delay(1000); // Captures context by default
+11.     Console.WriteLine("I won't be reached")
+12.     return "Done";
+13. }
+````
+
+So, have in mind this:
+
+- In WPF there is a context, which is the UI thread
+- UI thread will reach Line 4 and call the async method
+- The UI thread enters the method and in line 10 will delegate the Task to another thread to
+  execute it, and then the UI Thread will go back to line 4 to wait for that thread to continue the
+  method and return the task completed
+- Since in line 4 we have `.Result`, the **UI thread** will wait at line 4, in blocked status
+- When the task is completed, since we asked `ConfigureAwait(true)`, the thread MUST return the
+  completed task to the thread of the current context, which is the **UI thread**
+- But the UI thread is with status **blocked**, and can't accept any tasks because it's waiting for
+  itself!
+
+In a Console App, there is no SynchronizationContext, so continuations run on the ThreadPool,
+instead of a single UI thread, avoiding this issue.
+
+Let's check the WPF "ConfigureAwaitDeadlock" to see that deadlock.
+
+## Stacked usings
+
+In situations where you create and use multiple objects that implement `IAsyncDisposable`, it's
+possible that stacking `await using` statements with `ConfigureAwait` could prevent calls to
+`DisposeAsync()` in errant conditions. To ensure that `DisposeAsync()` is always called, you should
+avoid stacking. The following three code examples show acceptable patterns to use instead.
+
+Basically, in all acceptable patterns you can see that the disposal happens sequentially. The
+constructor of the classes being initialized must at least complete successfully so it's possible
+to call their disposal methods.
+
+### Acceptable pattern one
+
+````csharp
+class ExampleOneProgram
+{
+    static async Task Main()
+    {
+        var objOne = new ExampleAsyncDisposable();
+        await using (objOne.ConfigureAwait(false))
+        {
+            // Interact with the objOne instance.
+
+            var objTwo = new ExampleAsyncDisposable();
+            await using (objTwo.ConfigureAwait(false))
+            {
+                // Interact with the objOne and/or objTwo instance(s).
+            }
+        }
+
+        Console.ReadLine();
+    }
+}
+````
+
+### Acceptable pattern two
+
+````csharp
+class ExampleTwoProgram
+{
+    static async Task Main()
+    {
+        var objOne = new ExampleAsyncDisposable();
+        await using (objOne.ConfigureAwait(false))
+        {
+            // Interact with the objOne instance.
+        }
+
+        var objTwo = new ExampleAsyncDisposable();
+        await using (objTwo.ConfigureAwait(false))
+        {
+            // Interact with the objTwo instance.
+        }
+
+        Console.ReadLine();
+    }
+}
+````
+
+### Acceptable pattern three
+
+````csharp
+class ExampleThreeProgram
+{
+    static async Task Main()
+    {
+        var objOne = new ExampleAsyncDisposable();
+        await using var ignored1 = objOne.ConfigureAwait(false);
+
+        var objTwo = new ExampleAsyncDisposable();
+        await using var ignored2 = objTwo.ConfigureAwait(false);
+
+        // Interact with objOne and/or objTwo instance(s).
+
+        Console.ReadLine();
+    }
+}
+````
+
+### Unacceptable pattern
+
+````csharp
+class DoNotDoThisProgram
+{
+    static async Task Main()
+    {
+        var objOne = new ExampleAsyncDisposable();
+        // Exception thrown on .ctor
+        var objTwo = new AnotherAsyncDisposable();
+
+        await using (objOne.ConfigureAwait(false))  // Bad
+        await using (objTwo.ConfigureAwait(false))  // Bad
+        {
+            // Neither object has its DisposeAsync called.
+        }
+
+        Console.ReadLine();
+    }
+}
+````
 
 ## Best Practices and Common Pitfalls
 
