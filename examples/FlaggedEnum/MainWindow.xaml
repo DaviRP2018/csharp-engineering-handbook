@@ -39,10 +39,10 @@
         <Border Grid.Row="1" Grid.Column="0" BorderBrush="LightGray" BorderThickness="1"
                 Margin="0,0,5,0" Padding="15">
             <StackPanel>
-                <TextBlock Text="Traditional If Logic" FontSize="16" FontWeight="Bold"
+                <TextBlock Text="Traditional List Logic" FontSize="16" FontWeight="Bold"
                            Foreground="DarkRed" Margin="0,0,0,10" />
                 <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" FontSize="13">
-                    Checks each permission using multiple Boolean properties and AND/OR conditions.
+                    Checks each permission by iterating through a List&lt;NormalEnum&gt; and checking for existence.
                 </TextBlock>
                 <Border Background="#FFF0F0" Padding="10" CornerRadius="5">
                     <StackPanel>
@@ -53,7 +53,7 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Margin="0,15,0,0" FontSize="11" FontStyle="Italic" TextWrapping="Wrap">
-                    if (user.CanRead &amp;&amp; user.CanWrite &amp;&amp; ...)
+                    foreach(var p in req) if(!user.NormalPerms.Contains(p)) ...
                 </TextBlock>
             </StackPanel>
         </Border>
@@ -76,7 +76,7 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Margin="0,15,0,0" FontSize="11" FontStyle="Italic" TextWrapping="Wrap">
-                    if ((user.Permissions &amp; required) == required)
+                    if (user.FlaggedPermissions.HasFlag(required))
                 </TextBlock>
             </StackPanel>
         </Border>

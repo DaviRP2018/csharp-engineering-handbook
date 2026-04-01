@@ -3,6 +3,16 @@ using System.Windows;
 
 namespace FlaggedEnum;
 
+public enum NormalPermissions
+{
+    Read,
+    Write,
+    Execute,
+    Admin,
+    Delete,
+    Share
+}
+
 [Flags]
 public enum UserPermissions
 {
@@ -17,16 +27,41 @@ public enum UserPermissions
 
 public class User
 {
-    // Individual booleans for "Traditional" check
-    public bool CanRead { get; set; }
-    public bool CanWrite { get; set; }
-    public bool CanExecute { get; set; }
-    public bool CanAdmin { get; set; }
-    public bool CanDelete { get; set; }
-    public bool CanShare { get; set; }
+    /*
+     * MEMORY COMPARISON:
+     *
+     * 1. Traditional approach (List<NormalPermissions>):
+     *    - List Object Header: 8-16 bytes
+     *    - Pointer to the internal array: 8 bytes (on 64-bit)
+     *    - Internal Array Object: Header (8-16 bytes) + Length (4 bytes) + Padding
+     *    - Actual Data (Enums): Each int in the array is 4 bytes.
+     *    - Capacity: A List often allocates more than it uses (e.g., capacity of 4 or 8).
+     *    - ESTIMATE: ~40-80+ bytes per user just to store a few permissions.
+     *
+     * 2. Modern approach (FlaggedPermissions Enum):
+     *    - A single 'int' (the underlying type of the Enum).
+     *    - COST: Exactly 4 bytes per user.
+     *
+     * VISUAL REPRESENTATION IN MEMORY:
+     *
+     * [ List Approach ]                 [ Flagged Enum Approach ]
+     * User Object                       User Object
+     * +-----------------------+         +-----------------------+
+     * | List Reference (8b)  |------>   | Flagged (4b) [001011] |
+     * +-----------------------+         +-----------------------+
+     *             |
+     *             v
+     *        List Object
+     *        +-----------------------+
+     *        | Array Ref (8b) |------> Internal Array [R, W, E, 0, 0...]
+     *        +-----------------------+
+     */
 
-    // Flagged enum for "Modern" check
-    public UserPermissions Permissions { get; set; }
+    // Traditional approach using a List of normal Enums
+    public List<NormalPermissions> NormalPermissions { get; set; } = new();
+
+    // Modern approach using a Flagged Enum
+    public UserPermissions FlaggedPermissions { get; set; }
 }
 
 public partial class MainWindow : Window
@@ -46,16 +81,22 @@ public partial class MainWindow : Window
         for (var i = 0; i < UserCount; i++)
         {
             var p = (UserPermissions)random.Next(0, 64);
-            _users.Add(new User
-            {
-                Permissions = p,
-                CanRead = p.HasFlag(UserPermissions.Read),
-                CanWrite = p.HasFlag(UserPermissions.Write),
-                CanExecute = p.HasFlag(UserPermissions.Execute),
-                CanAdmin = p.HasFlag(UserPermissions.Admin),
-                CanDelete = p.HasFlag(UserPermissions.Delete),
-                CanShare = p.HasFlag(UserPermissions.Share)
-            });
+            var user = new User { FlaggedPermissions = p };
+
+            if (p.HasFlag(UserPermissions.Read))
+                user.NormalPermissions.Add(NormalPermissions.Read);
+            if (p.HasFlag(UserPermissions.Write))
+                user.NormalPermissions.Add(NormalPermissions.Write);
+            if (p.HasFlag(UserPermissions.Execute))
+                user.NormalPermissions.Add(NormalPermissions.Execute);
+            if (p.HasFlag(UserPermissions.Admin))
+                user.NormalPermissions.Add(NormalPermissions.Admin);
+            if (p.HasFlag(UserPermissions.Delete))
+                user.NormalPermissions.Add(NormalPermissions.Delete);
+            if (p.HasFlag(UserPermissions.Share))
+                user.NormalPermissions.Add(NormalPermissions.Share);
+
+            _users.Add(user);
         }
     }
 
@@ -69,6 +110,36 @@ public partial class MainWindow : Window
         var reqDel = ChkDelete.IsChecked ?? false;
         var reqShare = ChkShare.IsChecked ?? false;
 
+        // 2. Run Traditional Test (Checking multiple items in a List) ============================
+        var reqNormal = new List<NormalPermissions>();
+        if (reqRead) reqNormal.Add(NormalPermissions.Read);
+        if (reqWrite) reqNormal.Add(NormalPermissions.Write);
+        if (reqExec) reqNormal.Add(NormalPermissions.Execute);
+        if (reqAdmin) reqNormal.Add(NormalPermissions.Admin);
+        if (reqDel) reqNormal.Add(NormalPermissions.Delete);
+        if (reqShare) reqNormal.Add(NormalPermissions.Share);
+
+        long traditionalMatches = 0;
+        var sw = Stopwatch.StartNew();
+        foreach (var user in _users)
+        {
+            var isMatch = true;
+            foreach (var req in reqNormal)
+            {
+                if (user.NormalPermissions.Contains(req)) continue;
+                isMatch = false;
+                break;
+            }
+
+            if (isMatch)
+                traditionalMatches++;
+        }
+
+        sw.Stop();
+        TxtTraditionalTime.Text = $"Time: {sw.Elapsed.TotalMilliseconds:F2}ms";
+        TxtTraditionalResult.Text = $"Matches found: {traditionalMatches:N0}";
+
+        // 3. Run Flagged Enum Test (Single Bitwise Operation) ====================================
         var reqFlags = UserPermissions.None;
         if (reqRead) reqFlags |= UserPermissions.Read;
         if (reqWrite) reqFlags |= UserPermissions.Write;
@@ -77,32 +148,11 @@ public partial class MainWindow : Window
         if (reqDel) reqFlags |= UserPermissions.Delete;
         if (reqShare) reqFlags |= UserPermissions.Share;
 
-        // 2. Run Traditional Test ================================================================
-        long traditionalMatches = 0;
-        var sw = Stopwatch.StartNew();
-        foreach (var user in _users)
-        {
-            // Traditional IFs
-            if (reqRead && !user.CanRead) continue;
-            if (reqWrite && !user.CanWrite) continue;
-            if (reqExec && !user.CanExecute) continue;
-            if (reqAdmin && !user.CanAdmin) continue;
-            if (reqDel && !user.CanDelete) continue;
-            if (reqShare && !user.CanShare) continue;
-
-            traditionalMatches++;
-        }
-
-        sw.Stop();
-        TxtTraditionalTime.Text = $"Time: {sw.Elapsed.TotalMilliseconds:F2}ms";
-        TxtTraditionalResult.Text = $"Matches found: {traditionalMatches:N0}";
-
-        // 3. Run Flagged Enum Test ===============================================================
         long flaggedMatches = 0;
         sw.Restart();
         foreach (var user in _users)
-            // Flagged Enum bitwise check
-            if ((user.Permissions & reqFlags) == reqFlags)
+            // Single bitwise operation vs multiple List lookups
+            if (user.FlaggedPermissions.HasFlag(reqFlags))
                 flaggedMatches++;
 
         sw.Stop();
