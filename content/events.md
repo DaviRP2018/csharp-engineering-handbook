@@ -1,3 +1,0 @@
-﻿# Delegates
-# Events
-# Lambdas

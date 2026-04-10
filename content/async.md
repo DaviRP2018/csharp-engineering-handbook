@@ -18,6 +18,33 @@ all available threads are blocked waiting for I/O.
 
 ### What Problem Async Programming Solves
 
+```mermaid
+sequenceDiagram
+  participant User
+  participant App
+  participant Thread
+  participant IO as Database/Network
+  Note over App, Thread: Synchronous (Blocking)
+  User ->> App: Request
+  App ->> Thread: Start task
+  Thread ->> IO: Request data
+  activate Thread
+  Note right of Thread: Thread is BUSY waiting
+  IO -->> Thread: Response
+  deactivate Thread
+  Thread ->> App: Process result
+  App ->> User: Response
+  Note over App, Thread: Asynchronous (Non-blocking)
+  User ->> App: Request
+  App ->> Thread: Start task
+  Thread ->> IO: Request data (async)
+  Note right of Thread: Thread is RELEASED to work elsewhere
+  IO -->> Thread: Callback / Completion
+  Note right of Thread: Thread (any) resumes task
+  Thread ->> App: Process result
+  App ->> User: Response
+```
+
 The primary challenge in software performance is often not the CPU speed, but the time spent
 waiting for external operations—such as database queries, network requests, or disk I/O. In a
 synchronous world, a thread (the unit of execution) must wait for these operations to complete
@@ -76,6 +103,30 @@ multiple tasks, not necessarily in parallel.
   at the same time.
 
 In the restaurant analogy, this is the kitchen preparing a complex dish.
+
+```mermaid
+flowchart TD
+  subgraph Async [Async: One waiter, many tables]
+    W1[Waiter]
+    T1[Table 1]
+    T2[Table 2]
+    T3[Table 3]
+    W1 -- order --> T1
+    W1 -- order --> T2
+    W1 -- order --> T3
+    T1 -. waiting .-> K[Kitchen]
+    T2 -. waiting .-> K
+    T3 -. waiting .-> K
+  end
+
+  subgraph Parallel [Parallel: Many cooks, one dish]
+    C1[Cook 1: Sauce]
+    C2[Cook 2: Meat]
+    C3[Cook 3: Garnish]
+    C1 & C2 & C3 --> Plate[Finished Plate]
+  end
+```
+
 The chef doesn’t cook everything alone—instead, different cooks handle different
 parts (meat, sauce, garnish) at the same time, and everything comes together at the end.
 Parallelism is about dividing work and doing it simultaneously to finish faster.

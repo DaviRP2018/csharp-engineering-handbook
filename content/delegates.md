@@ -59,6 +59,22 @@ signature) that any assigned method must fulfill.
 
 ### 1. Defining the Delegate
 
+```mermaid
+graph LR
+    subgraph DelegateDefinition [Delegate Type]
+        D1[Return Type] --- D2[Parameters]
+    end
+
+    subgraph Methods [Compatible Methods]
+        M1[Method A]
+        M2[Method B]
+    end
+
+    DelegateDefinition -.-> M1
+    DelegateDefinition -.-> M2
+    style DelegateDefinition fill: #f9f, stroke: #333
+```
+
 You use the `delegate` keyword followed by the return type and parameters. Think of it as an
 "interface for a single method."
 
@@ -84,6 +100,16 @@ handler = BuyNow;
 > Delegates support **Multicast**, meaning a single delegate variable can hold references to
 > multiple methods. When invoked, they are called in the order they were added using the `+=`
 > operator.
+
+```mermaid
+graph TD
+    subgraph Multicast [Multicast Delegate Chain]
+        direction TB
+        Invocation[Invoke Delegate] --> M1[Method 1]
+        M1 --> M2[Method 2]
+        M2 --> M3[Method 3]
+    end
+```
 
 ## Covariance & Contravariance
 

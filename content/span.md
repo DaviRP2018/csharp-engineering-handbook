@@ -26,6 +26,30 @@ region of memory**.
 
 ### Example:
 
+```mermaid
+graph LR
+  subgraph Array [Original Array]
+    direction LR
+    A[10]
+    B[20]
+    C[30]
+    D[40]
+    E[50]
+  end
+
+  subgraph Span [Span/Slice]
+    direction LR
+    B_slice[20]
+    C_slice[30]
+    D_slice[40]
+  end
+
+  Span -.-> B
+  Span -.-> C
+  Span -.-> D
+  style Span fill: #f9f, stroke: #333, stroke-width: 2px, stroke-dasharray: 5 5
+```
+
 ```csharp
 int[] numbers = { 10, 20, 30, 40, 50 };
 // Create a slice starting at index 1 with length 3: [20, 30, 40]

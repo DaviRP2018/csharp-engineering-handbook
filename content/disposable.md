@@ -12,6 +12,26 @@ connections even if there is plenty of RAM available.
 
 ## The Problem: Managed vs. Unmanaged Resources
 
+```mermaid
+graph TD
+    subgraph Managed [Managed Resources]
+        M1[Memory / Objects]
+        M2[GC handles cleanup]
+    end
+
+    subgraph Unmanaged [Unmanaged Resources]
+        U1[File Handles]
+        U2[DB Connections]
+        U3[Network Sockets]
+        U4[Native Memory]
+        U5[GC does NOT handle promptly]
+    end
+
+    GC[Garbage Collector] -- Cleans up --> Managed
+    App[Application] -- Responsible for --> Unmanaged
+    App -- via --> IDisposable[IDisposable / Dispose]
+```
+
 To understand why we need `IDisposable`, we must distinguish between two types of resources:
 
 1. **Managed Resources**: These are objects created on the managed heap (e.g., `string`, `List<T>`,
@@ -100,6 +120,25 @@ collected."
 Let's check the WPF form to see the benefit of using IDisposable interface.
 
 ## How To Properly Implement The IDisposable Interface – The Standard Dispose Pattern
+
+```mermaid
+flowchart TD
+    Start[Call Dispose] --> Suppress[GC.SuppressFinalize]
+    Suppress --> D1[Dispose true]
+    
+    Finalizer[Finalizer ~Class] --> D2[Dispose false]
+    
+    D1 & D2 --> Check{_disposed?}
+    Check -- Yes --> End[Exit]
+    Check -- No --> SetDisposed[Set _disposed = true]
+    
+    SetDisposed --> IsDisposing{disposing?}
+    IsDisposing -- true --> CleanManaged[Clean Managed Resources]
+    CleanManaged --> CleanUnmanaged[Clean Unmanaged Resources]
+    IsDisposing -- false --> CleanUnmanaged
+    
+    CleanUnmanaged --> End
+```
 
 - https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose
 

@@ -34,6 +34,23 @@ field.
 
 ### Step 2: Use Powers of Two
 
+```mermaid
+graph LR
+    subgraph Bits [Bit Representation]
+        B3[Bit 3: 8]
+        B2[Bit 2: 4]
+        B1[Bit 1: 2]
+        B0[Bit 0: 1]
+    end
+
+    subgraph Flags [Enum Values]
+        Admin[Admin] --> B3
+        Execute[Execute] --> B2
+        Write[Write] --> B1
+        Read[Read] --> B0
+    end
+```
+
 Each value must represent a unique **bit**.
 
 ```csharp
