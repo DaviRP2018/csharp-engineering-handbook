@@ -2,15 +2,15 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{4C397C37-DDE7-4F7B-B30E-D4819974CB68}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "slides", "slides", "{7CEEB6DD-130D-47B5-A48A-C8E56FFE74E2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "content", "content", "{7CEEB6DD-130D-47B5-A48A-C8E56FFE74E2}"
 	ProjectSection(SolutionItems) = preProject
-		slides\linq.md = slides\linq.md
-		slides\delegates.md = slides\delegates.md
-		slides\flaggedEnums.md = slides\flaggedEnums.md
-		slides\async.md = slides\async.md
-		slides\collections.md = slides\collections.md
-		slides\disposable.md = slides\disposable.md
-		slides\span.md = slides\span.md
+		content\linq.md = content\linq.md
+		content\delegates.md = content\delegates.md
+		content\flaggedEnums.md = content\flaggedEnums.md
+		content\async.md = content\async.md
+		content\collections.md = content\collections.md
+		content\disposable.md = content\disposable.md
+		content\span.md = content\span.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Linq", "examples\Linq\Linq.csproj", "{6760A095-97CD-450B-BF7E-0EAF66853FFE}"
